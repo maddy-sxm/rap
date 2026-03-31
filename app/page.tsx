@@ -69,9 +69,9 @@ const CATEGORY_META: Record<string, { label: string; icon: React.ReactNode }> = 
 };
 
 const REVENUE_META: Record<string, { label: string; dotClass: string; description: string; textColor: string }> = {
-  Low:      { label: "Low",      dotClass: "revenue-dot-low",  description: "Most available revenue opportunity appears to be captured. Incremental gains remain.", textColor: "#10b981" },
-  Moderate: { label: "Moderate", dotClass: "revenue-dot-mod",  description: "Revenue is being missed across key channels. Strategic gaps are identifiable and addressable.", textColor: "#f59e0b" },
-  High:     { label: "High",     dotClass: "revenue-dot-high", description: "Meaningful revenue is actively being lost. The gap between potential and performance is significant.", textColor: "#ef4444" },
+  Low:      { label: "Low",      dotClass: "revenue-dot-low",  description: "Most available revenue is being captured. Incremental optimization remains, but the foundation is working.", textColor: "#10b981" },
+  Moderate: { label: "Moderate", dotClass: "revenue-dot-mod",  description: "Revenue is being missed across key channels. The gaps are clear, the fixes are known, and the upside is actionable.", textColor: "#f59e0b" },
+  High:     { label: "High",     dotClass: "revenue-dot-high", description: "Revenue is actively being lost right now. Every week without action is compounding the cost of these gaps.", textColor: "#ef4444" },
 };
 
 const SCAN_STEPS = [
@@ -120,7 +120,7 @@ function Logo({ size = "md" }: { size?: "sm" | "md" }) {
         className={`font-bold tracking-tight ${s.textClass}`}
         style={{ color: "#efefef", fontFamily: "'Unbounded', sans-serif", letterSpacing: "-0.02em" }}
       >
-        Speed<span style={{ color: "#888888" }}>X</span>
+        SPEEDXMEDIA
       </span>
     </div>
   );
@@ -286,7 +286,7 @@ function LandingView({
             style={{ background: "#0e0e0e", border: "1px solid #1c1c1c", color: "#555555", letterSpacing: "0.13em", textTransform: "uppercase" }}
           >
             <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#c0392b", boxShadow: "0 0 5px rgba(192,57,43,0.7)" }} />
-            Website Revenue Score
+            Revenue Activation Plan
           </div>
 
           {/* Headline */}
@@ -294,13 +294,13 @@ function LandingView({
             className="font-bold leading-tight mb-6"
             style={{ fontSize: "clamp(1.9rem, 4.8vw, 3.25rem)", color: "#efefef", fontFamily: "'Unbounded', sans-serif", letterSpacing: "-0.03em" }}
           >
-            Find out how much revenue
+            Find Out How Much Revenue
             <br />
-            <span className="gradient-text">your website is leaving behind.</span>
+            <span className="gradient-text">Your Website Is Leaving Behind.</span>
           </h1>
 
           {/* Subheadline */}
-          <p className="text-lg leading-relaxed mb-12 max-w-lg mx-auto" style={{ color: "#5a5a5a" }}>
+          <p className="text-lg leading-relaxed mb-12 max-w-lg mx-auto" style={{ color: "#888888" }}>
             Enter your URL. We score it against the signals that determine whether
             visitors convert, search traffic compounds, and paid ads actually work.
           </p>
@@ -351,14 +351,14 @@ function LandingView({
             )}
           </form>
 
-          <p className="mt-5 text-xs" style={{ color: "#2e2e2e" }}>
+          <p className="mt-5 text-xs" style={{ color: "#555555" }}>
             30-second diagnostic &nbsp;&bull;&nbsp; No account required &nbsp;&bull;&nbsp; Used by growth teams
           </p>
         </div>
 
         {/* Category preview */}
         <div className="mt-20 max-w-3xl w-full mx-auto px-4">
-          <p className="text-center text-xs font-medium uppercase mb-8" style={{ color: "#2e2e2e", letterSpacing: "0.14em" }}>
+          <p className="text-center text-sm font-semibold uppercase mb-8" style={{ color: "#888888", letterSpacing: "0.14em" }}>
             What Gets Scored
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -368,10 +368,10 @@ function LandingView({
                 className="rounded-xl p-4 text-center card-hover"
                 style={{ background: "#0e0e0e", border: "1px solid #1c1c1c" }}
               >
-                <div className="flex justify-center mb-2" style={{ color: "#484848" }}>
+                <div className="flex justify-center mb-2" style={{ color: "#8b3a30" }}>
                   {meta.icon}
                 </div>
-                <p className="text-xs font-medium" style={{ color: "#484848" }}>{meta.label}</p>
+                <p className="text-xs font-medium" style={{ color: "#666666" }}>{meta.label}</p>
               </div>
             ))}
           </div>
@@ -388,84 +388,164 @@ function LandingView({
 function AnalyzingView({ url, scanStep }: { url: string; scanStep: number }) {
   const domain = extractDomain(url);
   const progress = Math.round(((scanStep + 1) / SCAN_STEPS.length) * 94);
+  // Arc math for SVG progress ring (r=70, circumference = 2π×70 ≈ 439.8)
+  const circ = 439.8;
+  const arcFill = (progress / 100) * circ;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4" style={{ background: "#080808" }}>
-      <div className="max-w-sm w-full text-center">
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-6"
+      style={{ background: "#080808", position: "relative", overflow: "hidden" }}
+    >
+      {/* Grid */}
+      <div
+        style={{
+          position: "absolute", inset: 0, pointerEvents: "none",
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)",
+          backgroundSize: "48px 48px",
+        }}
+      />
+      {/* Vignette */}
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse 85% 85% at 50% 50%, transparent 0%, #080808 70%)" }} />
 
-        {/* Pulse ring */}
-        <div className="relative inline-flex items-center justify-center mb-10">
-          <div
-            className="absolute w-24 h-24 rounded-full scan-pulse"
-            style={{
-              background: "radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%)",
-              border: "1px solid rgba(255,255,255,0.06)",
-            }}
-          />
-          <div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center"
-            style={{ background: "#111111", border: "1px solid #222222" }}
-          >
-            <svg width="26" height="26" viewBox="0 0 18 18" fill="none">
-              <path d="M3 9L7.5 4.5L12 9L9 9L9 13.5L6 13.5L6 9L3 9Z" fill="#efefef" />
-              <path d="M9 9L13.5 4.5L15 6L11 9L15 9L15 13.5L12 13.5L12 9L9 9Z" fill="#efefef" opacity=".4" />
+      <div style={{ maxWidth: 480, width: "100%", position: "relative", zIndex: 1 }}>
+
+        {/* Top label */}
+        <p style={{ textAlign: "center", color: "#efefef", fontSize: "0.85rem", letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 48, fontWeight: 600 }}>
+          Revenue Activation Plan — Diagnostic
+        </p>
+
+        {/* Radar element */}
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 32 }}>
+          <div style={{ position: "relative", width: 160, height: 160 }}>
+
+            {/* SVG rings + progress arc */}
+            <svg width="160" height="160" viewBox="0 0 160 160" style={{ position: "absolute", inset: 0 }}>
+              {/* Outer dashed ring */}
+              <circle cx="80" cy="80" r="74" stroke="rgba(255,255,255,0.07)" strokeWidth="1" fill="none" strokeDasharray="3 7" />
+              {/* Middle ring */}
+              <circle cx="80" cy="80" r="56" stroke="rgba(255,255,255,0.05)" strokeWidth="1" fill="none" />
+              {/* Inner ring */}
+              <circle className="radar-pulse-ring" cx="80" cy="80" r="38" stroke="rgba(255,255,255,0.1)" strokeWidth="1" fill="none" />
+              {/* Progress arc track */}
+              <circle cx="80" cy="80" r="70" stroke="#1a1a1a" strokeWidth="1.5" fill="none" />
+              {/* Progress arc fill */}
+              <circle
+                cx="80" cy="80" r="70"
+                stroke="#c0392b"
+                strokeWidth="1.5"
+                fill="none"
+                strokeDasharray={`${arcFill} ${circ}`}
+                strokeLinecap="round"
+                transform="rotate(-90 80 80)"
+                style={{ transition: "stroke-dasharray 1s cubic-bezier(0.4,0,0.2,1)", opacity: 0.85 }}
+              />
+            </svg>
+
+            {/* Rotating radar sweep arm */}
+            <svg width="160" height="160" viewBox="0 0 160 160" className="radar-spin" style={{ position: "absolute", inset: 0 }}>
+              <defs>
+                <linearGradient id="sweepGrad" x1="80" y1="80" x2="80" y2="10" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="#c0392b" stopOpacity="0.05" />
+                  <stop offset="100%" stopColor="#c0392b" stopOpacity="0.45" />
+                </linearGradient>
+              </defs>
+              {/* Sweep wedge */}
+              <path d="M80 80 L80 12 A68 68 0 0 1 107 19 Z" fill="url(#sweepGrad)" />
+              {/* Arm line */}
+              <line x1="80" y1="80" x2="80" y2="12" stroke="#c0392b" strokeWidth="1" strokeOpacity="0.7" />
+              {/* Tip dot */}
+              <circle cx="80" cy="13" r="1.5" fill="#c0392b" opacity="0.9" />
+            </svg>
+
+            {/* Center dot + logo box */}
+            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: "#0e0e0e", border: "1px solid #222", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
+                  <path d="M3 9L7.5 4.5L12 9L9 9L9 13.5L6 13.5L6 9L3 9Z" fill="#efefef" />
+                  <path d="M9 9L13.5 4.5L15 6L11 9L15 9L15 13.5L12 13.5L12 9L9 9Z" fill="#efefef" opacity=".35" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Corner brackets — top-left */}
+            <svg width="14" height="14" viewBox="0 0 14 14" style={{ position: "absolute", top: 0, left: 0 }}>
+              <path d="M8 1H1v7" stroke="#c0392b" strokeWidth="1" fill="none" strokeOpacity="0.5" />
+            </svg>
+            {/* Corner brackets — top-right */}
+            <svg width="14" height="14" viewBox="0 0 14 14" style={{ position: "absolute", top: 0, right: 0 }}>
+              <path d="M6 1h7v7" stroke="#c0392b" strokeWidth="1" fill="none" strokeOpacity="0.5" />
+            </svg>
+            {/* Corner brackets — bottom-left */}
+            <svg width="14" height="14" viewBox="0 0 14 14" style={{ position: "absolute", bottom: 0, left: 0 }}>
+              <path d="M8 13H1V6" stroke="#c0392b" strokeWidth="1" fill="none" strokeOpacity="0.5" />
+            </svg>
+            {/* Corner brackets — bottom-right */}
+            <svg width="14" height="14" viewBox="0 0 14 14" style={{ position: "absolute", bottom: 0, right: 0 }}>
+              <path d="M6 13h7V6" stroke="#c0392b" strokeWidth="1" fill="none" strokeOpacity="0.5" />
             </svg>
           </div>
         </div>
 
-        <h2 className="text-xl font-semibold mb-1.5" style={{ color: "#efefef", fontFamily: "'Unbounded', sans-serif", fontSize: "1rem", letterSpacing: "-0.01em" }}>
-          Analyzing your website
-        </h2>
-        <p className="text-sm mb-8" style={{ color: "#3a3a3a" }}>
+        {/* Domain */}
+        <p style={{ textAlign: "center", color: "#999999", fontFamily: "'Unbounded', sans-serif", fontSize: "1.25rem", letterSpacing: "-0.02em", fontWeight: 600, marginBottom: 36 }}>
           {domain}
         </p>
 
-        {/* Progress bar */}
-        <div className="w-full rounded-full overflow-hidden mb-8" style={{ background: "#181818", height: 2 }}>
-          <div
-            className="h-full rounded-full transition-all duration-700"
-            style={{
-              width: `${progress}%`,
-              background: "linear-gradient(90deg, #555555, #888888)",
-              transition: "width 0.9s cubic-bezier(0.4, 0, 0.2, 1)",
-            }}
-          />
+        {/* Progress bar + label */}
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+          <span style={{ color: "#666666", fontSize: "0.7rem", letterSpacing: "0.15em", textTransform: "uppercase" }}>Scanning</span>
+          <span style={{ color: "#c0392b", fontSize: "0.7rem", letterSpacing: "0.08em" }}>{progress}%</span>
+        </div>
+        <div style={{ height: 1, background: "#181818", marginBottom: 28, overflow: "hidden" }}>
+          <div style={{ height: "100%", background: "linear-gradient(90deg, #6b1a14, #c0392b)", width: `${progress}%`, transition: "width 1s cubic-bezier(0.4,0,0.2,1)" }} />
         </div>
 
-        {/* Scan steps */}
-        <div className="space-y-1.5 text-left">
+        {/* Steps */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
           {SCAN_STEPS.map((step, i) => {
             const isDone = i < scanStep;
             const isCurrent = i === scanStep;
             return (
               <div
                 key={step}
-                className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all duration-500 step-appear"
+                className="step-appear"
                 style={{
-                  opacity: isDone || isCurrent ? 1 : 0.2,
-                  background: isCurrent ? "rgba(255,255,255,0.025)" : "transparent",
-                  border: isCurrent ? "1px solid rgba(255,255,255,0.05)" : "1px solid transparent",
-                  color: isDone ? "#383838" : isCurrent ? "#c8c8c8" : "#2e2e2e",
-                  animationDelay: `${i * 0.04}s`,
+                  display: "flex", alignItems: "center", gap: 12,
+                  padding: "8px 12px", borderRadius: 6,
+                  opacity: isDone || isCurrent ? 1 : 0.45,
+                  background: isCurrent ? "rgba(192,57,43,0.06)" : "transparent",
+                  borderLeft: isCurrent ? "2px solid rgba(192,57,43,0.5)" : "2px solid transparent",
+                  transition: "opacity 0.4s ease, background 0.3s ease",
+                  animationDelay: `${i * 0.03}s`,
                 }}
               >
-                {isDone ? (
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
-                    <path d="M2.5 7L5.5 10 11.5 4" stroke="#484848" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                ) : isCurrent ? (
-                  <svg className="spinner" width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
-                    <circle cx="7" cy="7" r="5" stroke="#333333" strokeWidth="1.5" />
-                    <path d="M7 2A5 5 0 0 1 12 7" stroke="#888888" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                ) : (
-                  <div className="w-3.5 h-3.5 rounded-full flex-shrink-0" style={{ background: "#1c1c1c" }} />
+                <div style={{ width: 14, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {isDone ? (
+                    <svg width="10" height="10" viewBox="0 0 14 14" fill="none">
+                      <path d="M2.5 7L5.5 10 11.5 4" stroke="#555555" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  ) : isCurrent ? (
+                    <svg className="spinner" width="10" height="10" viewBox="0 0 14 14" fill="none">
+                      <circle cx="7" cy="7" r="5" stroke="#2a2a2a" strokeWidth="1.8" />
+                      <path d="M7 2A5 5 0 0 1 12 7" stroke="#c0392b" strokeWidth="1.8" strokeLinecap="round" />
+                    </svg>
+                  ) : (
+                    <div style={{ width: 3, height: 3, borderRadius: "50%", background: "#1e1e1e" }} />
+                  )}
+                </div>
+                <span style={{ fontSize: "0.9rem", color: isDone ? "#555555" : isCurrent ? "#efefef" : "#555555", letterSpacing: "0.01em", fontWeight: isCurrent ? 500 : 400 }}>
+                  {step}
+                </span>
+                {isDone && (
+                  <span style={{ marginLeft: "auto", fontSize: "0.65rem", color: "#484848", letterSpacing: "0.12em" }}>DONE</span>
                 )}
-                <span style={{ fontSize: "0.8125rem" }}>{step}</span>
               </div>
             );
           })}
         </div>
+
       </div>
     </div>
   );
@@ -551,7 +631,7 @@ function GateView({
 
         <div className="text-center mb-8">
           <h2 className="text-xl font-bold mb-2.5" style={{ color: "#efefef", fontFamily: "'Unbounded', sans-serif", fontSize: "1.125rem", letterSpacing: "-0.02em" }}>
-            Your Revenue Score is ready.
+            Your Revenue Action Plan Is Ready.
           </h2>
           <p className="text-sm leading-relaxed" style={{ color: "#5a5a5a" }}>
             We've completed a diagnostic of <span style={{ color: "#888888", fontWeight: 500 }}>{domain}</span>.
@@ -636,6 +716,15 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
   const domain = extractDomain(url);
   const overall = GRADE_STYLE[report.overall_grade] ?? GRADE_STYLE["C"];
   const rev = REVENUE_META[report.revenue_opportunity] ?? REVENUE_META["Moderate"];
+  const [activeInsight, setActiveInsight] = useState<string | null>(null);
+
+  function scrollToInsight(category: string) {
+    setActiveInsight(category);
+    setTimeout(() => {
+      const el = document.getElementById(`insight-${category}`);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 20);
+  }
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#080808" }}>
@@ -664,7 +753,7 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
 
           {/* ── Overall Grade ── */}
           <div className="text-center mb-12 animate-fade-in-up">
-            <p className="text-xs font-medium uppercase mb-6" style={{ color: "#2e2e2e", letterSpacing: "0.14em" }}>
+            <p className="text-sm font-semibold uppercase mb-6" style={{ color: "#efefef", letterSpacing: "0.14em" }}>
               Website Revenue Score
             </p>
 
@@ -688,15 +777,15 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
               </div>
             </div>
 
-            <p className="text-sm mb-3" style={{ color: "#3a3a3a" }}>{domain}</p>
-            <p className="text-base leading-relaxed max-w-lg mx-auto" style={{ color: "#7a7a7a" }}>
+            <p className="text-sm mb-3" style={{ color: "#666666" }}>{domain}</p>
+            <p className="text-base leading-relaxed max-w-lg mx-auto" style={{ color: "#999999" }}>
               {report.headline}
             </p>
           </div>
 
           {/* ── Category Grades ── */}
           <div className="mb-10 animate-fade-in-up animation-delay-200">
-            <p className="text-xs font-medium uppercase mb-5" style={{ color: "#2e2e2e", letterSpacing: "0.14em" }}>
+            <p className="text-xs font-medium uppercase mb-5" style={{ color: "#666666", letterSpacing: "0.14em" }}>
               Category Breakdown
             </p>
             <div className="grid grid-cols-2 gap-3">
@@ -708,13 +797,13 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
                   <>
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-2">
-                        <div style={{ color: gs.color, opacity: 0.6 }}>{meta?.icon}</div>
-                        <span className="text-xs font-medium" style={{ color: "#484848" }}>
+                        <div style={{ color: "#8b3a30" }}>{meta?.icon}</div>
+                        <span className="text-xs font-medium" style={{ color: "#777777" }}>
                           {meta?.label}
                         </span>
                       </div>
                       {hasInsight && (
-                        <svg width="11" height="11" viewBox="0 0 12 12" fill="none" style={{ color: "#2e2e2e", flexShrink: 0, marginTop: 1 }}>
+                        <svg width="11" height="11" viewBox="0 0 12 12" fill="none" style={{ color: "#555555", flexShrink: 0, marginTop: 1 }}>
                           <path d="M6 1v10M6 11l-3-3M6 11l3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                       )}
@@ -727,7 +816,7 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
                         >
                           {grade}
                         </div>
-                        <div className="text-xs mt-1.5" style={{ color: "#3a3a3a", letterSpacing: "0.04em" }}>
+                        <div className="text-xs mt-1.5" style={{ color: "#666666", letterSpacing: "0.04em" }}>
                           {gs.label}
                         </div>
                       </div>
@@ -740,63 +829,94 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
                   </>
                 );
 
+                const isActive = activeInsight === key;
                 const sharedStyle: React.CSSProperties = {
-                  background: "#0e0e0e",
-                  border: `1px solid ${gs.border}`,
+                  background: isActive ? "#151515" : "#0e0e0e",
+                  border: `1px solid ${isActive ? gs.color : gs.border}`,
                   display: "block",
                   textDecoration: "none",
+                  cursor: "pointer",
+                  transition: "border-color 0.2s ease, background 0.2s ease",
                 };
 
-                return hasInsight ? (
-                  <a
+                return (
+                  <button
                     key={key}
-                    href={`#insight-${key}`}
-                    className={`rounded-2xl p-5 card-hover animate-fade-in-up animation-delay-${(i + 2) * 100}`}
-                    style={{ ...sharedStyle, cursor: "pointer" }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#303030"; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = gs.border; }}
-                  >
-                    {cardContent}
-                  </a>
-                ) : (
-                  <div
-                    key={key}
-                    className={`rounded-2xl p-5 card-hover animate-fade-in-up animation-delay-${(i + 2) * 100}`}
+                    onClick={() => scrollToInsight(key)}
+                    className={`rounded-2xl p-5 card-hover animate-fade-in-up animation-delay-${(i + 2) * 100} w-full text-left`}
                     style={sharedStyle}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = isActive ? gs.color : "#303030"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = isActive ? gs.color : gs.border; }}
                   >
                     {cardContent}
-                  </div>
+                  </button>
                 );
               })}
             </div>
           </div>
 
-          {/* ── Strategic Insights ── */}
+          {/* ── What The Score Reveals ── */}
           <div className="mb-10 animate-fade-in-up animation-delay-400">
-            <p className="text-xs font-medium uppercase mb-5" style={{ color: "#2e2e2e", letterSpacing: "0.14em" }}>
+            <p className="text-xs font-medium uppercase mb-5" style={{ color: "#666666", letterSpacing: "0.14em" }}>
               What the Score Reveals
             </p>
-            <div className="space-y-3">
-              {report.top_insights.map((insight, i) => {
-                const meta = insight.category !== "general" ? CATEGORY_META[insight.category] : null;
+            <div className="space-y-2">
+              {report.top_insights.map((insight) => {
+                const meta = CATEGORY_META[insight.category];
+                const gs = GRADE_STYLE[report.category_grades[insight.category as keyof typeof report.category_grades]] ?? GRADE_STYLE["C"];
+                const isActive = activeInsight === insight.category;
                 return (
                   <div
-                    key={i}
-                    id={insight.category !== "general" ? `insight-${insight.category}` : undefined}
-                    className="insight-card px-5 py-4 rounded-xl"
-                    style={{ background: "#0e0e0e", border: "1px solid #1c1c1c", borderLeft: "2px solid #1c1c1c", scrollMarginTop: "80px" }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderLeftColor = "#3a3a3a"; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderLeftColor = "#1c1c1c"; }}
+                    key={insight.category}
+                    id={`insight-${insight.category}`}
+                    className="rounded-xl transition-all duration-300"
+                    style={{
+                      background: isActive ? "#141414" : "#0a0a0a",
+                      border: "1px solid #1c1c1c",
+                      borderLeft: `3px solid ${isActive ? gs.color : "#1c1c1c"}`,
+                      scrollMarginTop: "90px",
+                      padding: "16px 20px",
+                    }}
                   >
-                    {meta && (
-                      <div className="flex items-center gap-1.5 mb-2.5">
-                        <span style={{ color: "#3a3a3a" }}>{meta.icon}</span>
-                        <span className="text-xs font-medium uppercase" style={{ color: "#3a3a3a", letterSpacing: "0.1em" }}>
-                          {meta.label}
+                    {/* Category header row */}
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <span style={{ color: isActive ? gs.color : "#555555", transition: "color 0.3s" }}>
+                          {meta?.icon}
+                        </span>
+                        <span
+                          className="text-xs font-semibold uppercase"
+                          style={{ color: isActive ? "#cccccc" : "#555555", letterSpacing: "0.1em", transition: "color 0.3s" }}
+                        >
+                          {meta?.label}
                         </span>
                       </div>
-                    )}
-                    <p className="text-sm leading-relaxed" style={{ color: "#7a7a7a" }}>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="font-bold px-2 py-0.5 rounded"
+                          style={{
+                            color: gs.color,
+                            background: gs.bg,
+                            border: `1px solid ${gs.border}`,
+                            fontFamily: "'Unbounded', sans-serif",
+                            fontSize: "0.75rem",
+                          }}
+                        >
+                          {report.category_grades[insight.category as keyof typeof report.category_grades]}
+                        </div>
+                        <span style={{ color: "#555555", fontSize: "0.7rem", letterSpacing: "0.03em" }}>
+                          {gs.label}
+                        </span>
+                      </div>
+                    </div>
+                    {/* Explanation */}
+                    <p
+                      className="text-sm leading-relaxed"
+                      style={{
+                        color: isActive ? "#dddddd" : "#666666",
+                        transition: "color 0.3s ease",
+                      }}
+                    >
                       {insight.text}
                     </p>
                   </div>
@@ -807,7 +927,7 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
 
           {/* ── Revenue Opportunity ── */}
           <div className="mb-12 animate-fade-in-up animation-delay-500">
-            <p className="text-xs font-medium uppercase mb-5" style={{ color: "#2e2e2e", letterSpacing: "0.14em" }}>
+            <p className="text-xs font-medium uppercase mb-5" style={{ color: "#666666", letterSpacing: "0.14em" }}>
               Revenue Opportunity Signal
             </p>
             <div
@@ -837,7 +957,7 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
                     {rev.label} Opportunity
                   </span>
                 </div>
-                <p className="text-sm" style={{ color: "#5a5a5a" }}>{rev.description}</p>
+                <p className="text-sm" style={{ color: "#888888" }}>{rev.description}</p>
               </div>
             </div>
           </div>
@@ -872,7 +992,7 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
             >
               {report.cta_title}
             </h3>
-            <p className="text-sm leading-relaxed mb-7 max-w-sm mx-auto" style={{ color: "#5a5a5a" }}>
+            <p className="text-sm leading-relaxed mb-7 max-w-sm mx-auto" style={{ color: "#888888" }}>
               {report.cta_body}
             </p>
 

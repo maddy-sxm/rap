@@ -219,11 +219,11 @@ export function computeOverallGrade(categoryGrades: {
 
 export function generateHeadline(grade: Grade): string {
   const headlines: Record<Grade, string> = {
-    A: "Your website shows strong performance across most revenue dimensions — some upside remains.",
-    B: "Your website has a solid foundation, though measurable revenue gaps are present across key channels.",
-    C: "Your website has moderate signals, but meaningful conversion and visibility gaps are likely suppressing growth.",
-    D: "Your website has clear structural weaknesses that are actively limiting its ability to generate leads and revenue.",
-    F: "Your website appears to have critical gaps that may be preventing meaningful lead generation or organic growth.",
+    A: "Your website performs well across most revenue dimensions — but measurable upside remains uncaptured.",
+    B: "Your website has a solid foundation, but revenue gaps across key channels are costing you leads right now.",
+    C: "Your website has structural gaps in conversion and visibility that are actively suppressing revenue growth.",
+    D: "Your website has clear weaknesses that are directly limiting its ability to generate leads and revenue.",
+    F: "Your website has critical gaps that are preventing meaningful lead generation and organic growth.",
   };
   return headlines[grade];
 }
@@ -239,136 +239,74 @@ export function generateTopInsights(
     lead_capture: Grade;
   }
 ): InsightItem[] {
-  interface Candidate {
-    priority: number; // Lower = worse, shown first
-    category: string;
-    insight: string;
-  }
-
-  const candidates: Candidate[] = [];
-  const gradePriority: Record<Grade, number> = { F: 0, D: 1, C: 2, B: 3, A: 4 };
+  // Always returns exactly 4 insights in fixed order — one per category.
+  // Each insight explains the reasoning behind that category's specific grade.
 
   // ── Website Conversion ──
   const wc = categoryGrades.website_conversion;
+  let wcText: string;
   if (wc === "F" || wc === "D") {
     const noH1 = data.h1Tags.length === 0 || data.h1Tags[0].trim().length < 15;
-    candidates.push({
-      priority: gradePriority[wc],
-      category: "website_conversion",
-      insight: noH1
-        ? "Your website does not immediately communicate a clear value proposition, which may reduce conversion confidence before visitors reach a decision point."
-        : "Without a clear, action-oriented path forward, visitors arriving with intent may be leaving before completing a meaningful action — suppressing inquiry rates.",
-    });
+    wcText = noH1
+      ? "There is no clear value proposition above the fold. Visitors are landing with intent and leaving without a reason to act — this is direct revenue loss on every session."
+      : "There is no clear action-oriented path for visitors. Motivated traffic is arriving and disengaging before converting — every day this is unfixed, leads are walking out the door.";
   } else if (wc === "C") {
-    candidates.push({
-      priority: gradePriority[wc],
-      category: "website_conversion",
-      insight:
-        "While basic conversion elements are present, the messaging may not be differentiated enough to build confidence with unfamiliar visitors — leaving conversion potential unrealized.",
-    });
+    wcText = "Basic conversion elements exist, but the messaging lacks the differentiation and confidence triggers needed to convert cold visitors. Buyers who don't already know you are not converting.";
   } else if (wc === "B") {
-    candidates.push({
-      priority: gradePriority[wc],
-      category: "website_conversion",
-      insight:
-        "Conversion signals are present but the depth of trust-building and offer clarity may not be strong enough to capture the full range of visitor intent arriving at the page.",
-    });
+    wcText = "Conversion signals are in place, but trust depth and offer clarity are not strong enough to capture the full range of intent. A meaningful segment of motivated visitors is not completing an action.";
+  } else {
+    wcText = "Conversion structure is strong — clear value proposition, trust signals, and action-oriented CTAs are working together. The priority is maintaining this standard as traffic scales.";
   }
 
   // ── Search Visibility ──
   const sv = categoryGrades.search_visibility;
+  let svText: string;
   if (sv === "F" || sv === "D") {
-    candidates.push({
-      priority: gradePriority[sv],
-      category: "search_visibility",
-      insight:
-        !data.metaDescription || data.metaDescription.length < 50
-          ? "Search visibility appears limited beyond branded discovery, which restricts new customer acquisition to audiences already aware of you."
-          : "Thin on-page content may signal low topical authority to search engines, limiting organic rankings for category-level queries.",
-    });
+    svText = !data.metaDescription || data.metaDescription.length < 50
+      ? "Search visibility is limited to branded discovery. Your business is invisible to buyers searching category-level queries — the highest-value traffic source is not reaching you."
+      : "Thin on-page content signals low topical authority to search engines. You are not ranking for the category queries your buyers are using to find solutions.";
   } else if (sv === "C") {
-    candidates.push({
-      priority: gradePriority[sv],
-      category: "search_visibility",
-      insight:
-        "The on-page content structure is partially optimized, but gaps in topical depth and content hierarchy may be limiting how broadly search engines surface your pages.",
-    });
+    svText = "On-page structure is partially optimized, but gaps in topical depth and content hierarchy are actively limiting how broadly search engines surface your pages to new buyers.";
   } else if (sv === "B") {
-    candidates.push({
-      priority: gradePriority[sv],
-      category: "search_visibility",
-      insight:
-        "Search visibility shows a reasonable foundation, but the site may be underperforming for non-branded category queries — limiting reach to audiences not yet aware of the business.",
-    });
+    svText = "The foundation is solid, but the site is underperforming for non-branded category queries. A significant portion of your addressable search audience is not finding you.";
+  } else {
+    svText = "Search visibility signals are strong — title tags, H1 structure, meta descriptions, and content depth are all working in your favor. The opportunity is expanding into adjacent topic areas.";
   }
 
   // ── Paid Traffic Readiness ──
   const pt = categoryGrades.paid_traffic_readiness;
+  let ptText: string;
   if (pt === "F" || pt === "D") {
-    candidates.push({
-      priority: gradePriority[pt],
-      category: "paid_traffic_readiness",
-      insight:
-        "The current site structure suggests paid traffic would face significant friction before reaching a clear next step, which typically results in elevated cost-per-lead and poor return on ad spend.",
-    });
+    ptText = "Paid traffic sent to this site is hitting significant friction before reaching a clear next step. Every dollar spent on ads right now is generating a fraction of the leads it should.";
   } else if (pt === "C") {
-    candidates.push({
-      priority: gradePriority[pt],
-      category: "paid_traffic_readiness",
-      insight:
-        "The page has partial conversion infrastructure, but offer clarity and above-the-fold messaging may not be compelling enough to convert cold paid traffic at an efficient cost.",
-    });
+    ptText = "The page has partial conversion infrastructure, but the above-the-fold message and offer clarity are not strong enough to convert cold paid traffic. Ad spend is generating leads below its ceiling.";
   } else if (pt === "B") {
-    candidates.push({
-      priority: gradePriority[pt],
-      category: "paid_traffic_readiness",
-      insight:
-        "Paid traffic readiness is solid, though the absence of layered trust signals and a sharper conversion path may be limiting the quality of leads generated from paid channels.",
-    });
+    ptText = "Paid readiness is solid, but gaps in trust signals and conversion path sharpness are capping lead quality from paid channels. The infrastructure is close — but not fully converting what it should.";
+  } else {
+    ptText = "The page is well-structured for paid traffic — strong above-the-fold messaging, clear offer, and multiple trust signals reduce the friction that kills ad ROI. Paid campaigns have a solid foundation to scale from.";
   }
 
   // ── Lead Capture ──
   const lc = categoryGrades.lead_capture;
+  let lcText: string;
   if (lc === "F" || lc === "D") {
-    candidates.push({
-      priority: gradePriority[lc],
-      category: "lead_capture",
-      insight:
-        !data.hasForm && !data.hasPhone
-          ? "The site appears to lack clear capture mechanisms, which means visitors who are ready to engage may have no direct path to convert — resulting in lost lead volume."
-          : "Limited capture pathways suggest that interested visitors may be disengaging before taking a meaningful action — reducing lead volume from existing traffic.",
-    });
+    lcText = !data.hasForm && !data.hasPhone
+      ? "There are no clear capture mechanisms on this site. Visitors who are ready to engage have no path to convert — this is the most direct form of revenue loss a website can have."
+      : "Capture pathways are too narrow. Motivated visitors who don't prefer the one available contact method are leaving without converting — and that lead volume is gone.";
   } else if (lc === "C") {
-    candidates.push({
-      priority: gradePriority[lc],
-      category: "lead_capture",
-      insight:
-        "A narrow set of capture options may be suppressing conversion volume, as different buyers prefer different engagement channels — this gap likely limits total leads generated.",
-    });
+    lcText = "A limited set of capture options is suppressing total lead volume. Different buyers convert through different channels — the ones not covered here are not converting at all.";
   } else if (lc === "B") {
-    candidates.push({
-      priority: gradePriority[lc],
-      category: "lead_capture",
-      insight:
-        "Capture pathways are functional, but the absence of lower-friction options — such as scheduling or live engagement — may be slowing the buyer journey for some visitor segments.",
-    });
+    lcText = "Capture pathways are functional, but the lack of lower-friction options — scheduling, live chat, or instant response — is slowing the buyer journey and costing you conversions at the decision point.";
+  } else {
+    lcText = "Lead capture is comprehensive — multiple contact methods give buyers the flexibility to engage on their own terms. The focus should be on speed-to-response and lead qualification, not volume.";
   }
 
-  // Sort worst-first, take top 3
-  candidates.sort((a, b) => a.priority - b.priority);
-
-  const fallbacks: InsightItem[] = [
-    { category: "general", text: "The alignment between traffic sources and on-page messaging may not be strong enough to convert visitors arriving without prior brand awareness." },
-    { category: "general", text: "Strengthening the visibility of social proof and authority signals could reduce buyer hesitation and increase both the quality and volume of leads generated." },
-    { category: "general", text: "The gap between site traffic potential and actual revenue capture suggests an optimization opportunity that a structured paid and conversion strategy could address." },
+  return [
+    { category: "website_conversion",   text: wcText },
+    { category: "search_visibility",     text: svText },
+    { category: "paid_traffic_readiness", text: ptText },
+    { category: "lead_capture",          text: lcText },
   ];
-
-  const result: InsightItem[] = candidates.slice(0, 3).map((c) => ({ category: c.category, text: c.insight }));
-  while (result.length < 3) {
-    result.push(fallbacks[result.length]);
-  }
-
-  return result.slice(0, 3);
 }
 
 // ─── Revenue Opportunity ──────────────────────────────────────────────────────
@@ -527,14 +465,15 @@ export function gradeWebsite(pageData: PageData): GradeReport {
       category_grades: categoryGrades,
       headline: generateHeadline("C"),
       top_insights: [
-        { category: "general", text: "Our diagnostic encountered limited access to the page, which may affect the precision of this score." },
-        { category: "general", text: "Conversion clarity and trust-building signals could not be fully verified — these are typically among the highest-impact revenue levers." },
-        { category: "general", text: "The gap between potential traffic performance and actual lead capture is a common area where revenue is left on the table." },
+        { category: "website_conversion",    text: "Conversion signals were not fully accessible for scoring. Sites that restrict access frequently have unclear value propositions and weak CTAs — the primary driver of lost leads." },
+        { category: "search_visibility",      text: "On-page SEO signals could not be fully verified. Without confirmed title structure, meta descriptions, and content depth, search visibility is an unknown risk." },
+        { category: "paid_traffic_readiness", text: "Paid readiness could not be confirmed. Restricted access often correlates with friction points that kill ad ROI — unclear offers and limited trust signals above the fold." },
+        { category: "lead_capture",           text: "Lead capture mechanisms were not fully verifiable. A direct review is needed to confirm whether the capture infrastructure matches the volume of traffic this site receives." },
       ],
       revenue_opportunity: "High",
       cta_title: "Get Your Full Revenue Activation Plan",
       cta_body:
-        "This score surfaces the top-level signals. The full Revenue Activation Plan identifies exactly where revenue is being lost, which channels have the highest upside, and the specific actions that will move the needle fastest.",
+        "This score surfaces the top-level signals. Your full Revenue Activation Plan outlines where revenue is currently being lost, which channels offer the highest upside, and the exact actions required to drive measurable growth.",
     };
   }
 
@@ -563,6 +502,6 @@ export function gradeWebsite(pageData: PageData): GradeReport {
     revenue_opportunity,
     cta_title: "Get Your Full Revenue Activation Plan",
     cta_body:
-      "This score surfaces the top-level signals. The full Revenue Activation Plan identifies exactly where revenue is being lost, which channels have the highest upside, and the specific actions that will move the needle fastest.",
+      "This score surfaces the top-level signals. Your full Revenue Activation Plan outlines where revenue is currently being lost, which channels offer the highest upside, and the exact actions required to drive measurable growth.",
   };
 }

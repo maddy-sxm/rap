@@ -159,6 +159,23 @@ body {
   animation: slideInStep 0.35s ease-out forwards;
 }
 
+@keyframes radarSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.radar-spin {
+  animation: radarSpin 2.8s linear infinite;
+  transform-origin: 80px 80px;
+}
+
+@keyframes radarPulse {
+  0%, 100% { opacity: 0.12; }
+  50%       { opacity: 0.28; }
+}
+.radar-pulse-ring {
+  animation: radarPulse 2.4s ease-in-out infinite;
+}
+
 /* ── Cards ── */
 .card-surface {
   background-color: var(--card);
