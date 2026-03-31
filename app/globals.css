@@ -1,0 +1,199 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #07070b;
+  --surface: #0d0d14;
+  --card: #111118;
+  --border: #1e1e2e;
+  --border-subtle: #16161f;
+  --text-primary: #f0f0fa;
+  --text-secondary: #6b6b80;
+  --accent: #204ce5;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html,
+body {
+  background-color: var(--background);
+  color: var(--text-primary);
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2a3a;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3a3a50;
+}
+
+/* ── Grade glow effects ── */
+.glow-a {
+  box-shadow: 0 0 28px rgba(16, 185, 129, 0.35), 0 0 56px rgba(16, 185, 129, 0.12);
+}
+.glow-b {
+  box-shadow: 0 0 28px rgba(56, 189, 248, 0.35), 0 0 56px rgba(56, 189, 248, 0.12);
+}
+.glow-c {
+  box-shadow: 0 0 28px rgba(245, 158, 11, 0.35), 0 0 56px rgba(245, 158, 11, 0.12);
+}
+.glow-d {
+  box-shadow: 0 0 28px rgba(249, 115, 22, 0.35), 0 0 56px rgba(249, 115, 22, 0.12);
+}
+.glow-f {
+  box-shadow: 0 0 28px rgba(239, 68, 68, 0.35), 0 0 56px rgba(239, 68, 68, 0.12);
+}
+
+/* ── Loading / Analysis ── */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.spinner {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes scanPulse {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 1; }
+}
+.scan-pulse {
+  animation: scanPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes progressSweep {
+  0%   { width: 0%; }
+  20%  { width: 18%; }
+  40%  { width: 38%; }
+  60%  { width: 58%; }
+  80%  { width: 78%; }
+  100% { width: 96%; }
+}
+.progress-sweep {
+  animation: progressSweep 4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* ── Text & gradient ── */
+.gradient-text {
+  background: linear-gradient(135deg, #204ce5 0%, #527eff 50%, #7fa0ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-subtle {
+  background: linear-gradient(135deg, #a78bfa 0%, #818cf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Input ── */
+.input-focus:focus {
+  outline: none;
+  border-color: #204ce5;
+  box-shadow: 0 0 0 3px rgba(32, 76, 229, 0.14);
+}
+
+.input-focus-blue:focus {
+  outline: none;
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12);
+}
+
+/* ── Animations ── */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.animation-delay-100 { animation-delay: 0.1s; opacity: 0; }
+.animation-delay-200 { animation-delay: 0.2s; opacity: 0; }
+.animation-delay-300 { animation-delay: 0.3s; opacity: 0; }
+.animation-delay-400 { animation-delay: 0.4s; opacity: 0; }
+.animation-delay-500 { animation-delay: 0.5s; opacity: 0; }
+.animation-delay-600 { animation-delay: 0.6s; opacity: 0; }
+.animation-delay-700 { animation-delay: 0.7s; opacity: 0; }
+.animation-delay-800 { animation-delay: 0.8s; opacity: 0; }
+
+@keyframes gradeReveal {
+  0%   { opacity: 0; transform: scale(0.6); filter: blur(8px); }
+  60%  { transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+.grade-reveal {
+  animation: gradeReveal 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes slideInStep {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.step-appear {
+  animation: slideInStep 0.3s ease-out forwards;
+}
+
+/* ── Cards ── */
+.card-surface {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.card-hover {
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-hover:hover {
+  border-color: #2e2e42;
+  transform: translateY(-1px);
+}
+
+/* ── Noise texture overlay (very subtle premium texture) ── */
+.noise-overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 0;
+}
+
+/* ── Revenue indicator ── */
+.revenue-dot-low    { background: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.6); }
+.revenue-dot-mod    { background: #f59e0b; box-shadow: 0 0 8px rgba(245,158,11,0.6); }
+.revenue-dot-high   { background: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,0.6); }
+
+/* ── Insight left-border accent ── */
+.insight-card {
+  border-left: 3px solid #1e1e2e;
+  transition: border-color 0.2s ease;
+}
+.insight-card:hover {
+  border-left-color: #204ce5;
+}
