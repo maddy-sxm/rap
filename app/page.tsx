@@ -25,11 +25,11 @@ interface GradeReport {
 // ─── Design tokens ────────────────────────────────────────────────────────────
 
 const GRADE_STYLE: Record<string, { color: string; bg: string; border: string; glow: string; label: string }> = {
-  A: { color: "#10b981", bg: "rgba(16,185,129,0.08)", border: "rgba(16,185,129,0.2)", glow: "glow-a", label: "Strong" },
-  B: { color: "#38bdf8", bg: "rgba(56,189,248,0.08)", border: "rgba(56,189,248,0.2)", glow: "glow-b", label: "Solid" },
-  C: { color: "#f59e0b", bg: "rgba(245,158,11,0.08)", border: "rgba(245,158,11,0.2)", glow: "glow-c", label: "Gaps Present" },
-  D: { color: "#f97316", bg: "rgba(249,115,22,0.08)", border: "rgba(249,115,22,0.2)", glow: "glow-d", label: "Underperforming" },
-  F: { color: "#ef4444", bg: "rgba(239,68,68,0.08)", border: "rgba(239,68,68,0.2)", glow: "glow-f", label: "Critical" },
+  A: { color: "#10b981", bg: "rgba(16,185,129,0.07)",  border: "rgba(16,185,129,0.18)",  glow: "glow-a", label: "Strong" },
+  B: { color: "#38bdf8", bg: "rgba(56,189,248,0.07)",  border: "rgba(56,189,248,0.18)",  glow: "glow-b", label: "Solid" },
+  C: { color: "#f59e0b", bg: "rgba(245,158,11,0.07)",  border: "rgba(245,158,11,0.18)",  glow: "glow-c", label: "Gaps Present" },
+  D: { color: "#f97316", bg: "rgba(249,115,22,0.07)",  border: "rgba(249,115,22,0.18)",  glow: "glow-d", label: "Underperforming" },
+  F: { color: "#ef4444", bg: "rgba(239,68,68,0.07)",   border: "rgba(239,68,68,0.18)",   glow: "glow-f", label: "Critical" },
 };
 
 const CATEGORY_META: Record<string, { label: string; icon: React.ReactNode }> = {
@@ -37,7 +37,7 @@ const CATEGORY_META: Record<string, { label: string; icon: React.ReactNode }> = 
     label: "Website Conversion",
     icon: (
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <path d="M2 3h12v2L8 10 2 5V3ZM2 7l6 4.5L14 7v6H2V7Z" fill="currentColor" opacity=".9" />
+        <path d="M2 3h12v2L8 10 2 5V3ZM2 7l6 4.5L14 7v6H2V7Z" fill="currentColor" opacity=".85" />
       </svg>
     ),
   },
@@ -75,12 +75,12 @@ const REVENUE_META: Record<string, { label: string; dotClass: string; descriptio
 };
 
 const SCAN_STEPS = [
-  "Fetching homepage content...",
-  "Evaluating conversion signals...",
-  "Analyzing search visibility...",
-  "Assessing paid traffic readiness...",
-  "Scoring lead capture pathways...",
-  "Calculating revenue opportunity...",
+  "Fetching Website Structure",
+  "Parsing Conversion Signals",
+  "Reviewing Search Visibility Indicators",
+  "Evaluating Paid Traffic Readiness",
+  "Checking Lead Capture Pathways",
+  "Scoring Revenue Opportunity",
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -96,19 +96,31 @@ function extractDomain(url: string): string {
 // ─── SpeedX Logo ──────────────────────────────────────────────────────────────
 
 function Logo({ size = "md" }: { size?: "sm" | "md" }) {
-  const s = size === "sm" ? { box: 24, icon: 13, text: "text-lg" } : { box: 32, icon: 17, text: "text-xl" };
+  const s = size === "sm"
+    ? { box: 22, icon: 12, textClass: "text-base" }
+    : { box: 28, icon: 15, textClass: "text-lg" };
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2.5">
       <div
-        style={{ width: s.box, height: s.box, background: "#204ce5", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
+        style={{
+          width: s.box, height: s.box,
+          background: "#111111",
+          border: "1px solid #2a2a2a",
+          borderRadius: 6,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          flexShrink: 0,
+        }}
       >
         <svg width={s.icon} height={s.icon} viewBox="0 0 18 18" fill="none">
-          <path d="M3 9L7.5 4.5L12 9L9 9L9 13.5L6 13.5L6 9L3 9Z" fill="white" />
-          <path d="M9 9L13.5 4.5L15 6L11 9L15 9L15 13.5L12 13.5L12 9L9 9Z" fill="white" opacity=".6" />
+          <path d="M3 9L7.5 4.5L12 9L9 9L9 13.5L6 13.5L6 9L3 9Z" fill="#efefef" />
+          <path d="M9 9L13.5 4.5L15 6L11 9L15 9L15 13.5L12 13.5L12 9L9 9Z" fill="#efefef" opacity=".45" />
         </svg>
       </div>
-      <span className={`text-white font-bold tracking-tight ${s.text}`} style={{ fontFamily: "'Unbounded', sans-serif" }}>
-        Speed<span style={{ color: "#527eff" }}>X</span>
+      <span
+        className={`font-bold tracking-tight ${s.textClass}`}
+        style={{ color: "#efefef", fontFamily: "'Unbounded', sans-serif", letterSpacing: "-0.02em" }}
+      >
+        Speed<span style={{ color: "#888888" }}>X</span>
       </span>
     </div>
   );
@@ -135,22 +147,35 @@ export default function Home() {
     setAppState("analyzing");
     setScanStep(0);
 
-    const stepInterval = setInterval(() => {
-      setScanStep((prev) => {
-        if (prev < SCAN_STEPS.length - 1) return prev + 1;
-        clearInterval(stepInterval);
-        return prev;
-      });
-    }, 700);
+    // Start API fetch immediately — runs in parallel with the animation
+    const apiFetch = fetch("/api/grade", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: trimmed }),
+    });
+
+    // Step animation: advance every 1200ms, hold 900ms after the last step
+    const STEP_MS = 1200;
+    const animationDone = new Promise<void>((resolve) => {
+      let step = 0;
+      function advance() {
+        step++;
+        if (step < SCAN_STEPS.length) {
+          setScanStep(step);
+        }
+        if (step < SCAN_STEPS.length - 1) {
+          setTimeout(advance, STEP_MS);
+        } else {
+          setScanStep(SCAN_STEPS.length - 1);
+          setTimeout(resolve, 900);
+        }
+      }
+      setTimeout(advance, STEP_MS);
+    });
 
     try {
-      const res = await fetch("/api/grade", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: trimmed }),
-      });
-      clearInterval(stepInterval);
-      setScanStep(SCAN_STEPS.length - 1);
+      // Wait for BOTH the API call and the full animation to complete
+      const [res] = await Promise.all([apiFetch, animationDone]);
 
       if (!res.ok) {
         const data = await res.json();
@@ -159,10 +184,9 @@ export default function Home() {
 
       const data: GradeReport = await res.json();
       setReport(data);
-      await new Promise((r) => setTimeout(r, 400));
+      await new Promise((r) => setTimeout(r, 300));
       setAppState("gate");
     } catch (err) {
-      clearInterval(stepInterval);
       setUrlError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
       setAppState("landing");
     }
@@ -178,7 +202,6 @@ export default function Home() {
     }
 
     setSubmittingEmail(true);
-    // Fire-and-forget lead capture
     fetch("/api/capture", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -236,13 +259,19 @@ function LandingView({
   onSubmit: (e: FormEvent) => void;
 }) {
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#07070b" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: "#080808" }}>
       {/* Header */}
-      <header style={{ borderBottom: "1px solid #16161f" }} className="px-6 py-4">
+      <header style={{ borderBottom: "1px solid #161616" }} className="px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <Logo />
-          <a href="mailto:hello@speedx.io" className="text-sm transition-colors" style={{ color: "#4b4b60" }}>
-            hello@speedx.io
+          <a
+            href="mailto:hello@speedxmedia.com"
+            className="text-sm transition-colors"
+            style={{ color: "#3a3a3a" }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#888888"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "#3a3a3a"; }}
+          >
+            hello@speedxmedia.com
           </a>
         </div>
       </header>
@@ -254,16 +283,16 @@ function LandingView({
           {/* Badge */}
           <div
             className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium mb-10"
-            style={{ background: "#0d0d14", border: "1px solid #1e1e2e", color: "#6b6b80", letterSpacing: "0.13em", textTransform: "uppercase" }}
+            style={{ background: "#0e0e0e", border: "1px solid #1c1c1c", color: "#555555", letterSpacing: "0.13em", textTransform: "uppercase" }}
           >
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#204ce5", boxShadow: "0 0 6px rgba(32,76,229,0.8)" }} />
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#c0392b", boxShadow: "0 0 5px rgba(192,57,43,0.7)" }} />
             Website Revenue Score
           </div>
 
           {/* Headline */}
           <h1
-            className="font-bold leading-tight tracking-tight mb-6"
-            style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", color: "#f0f0fa", fontFamily: "'Unbounded', sans-serif" }}
+            className="font-bold leading-tight mb-6"
+            style={{ fontSize: "clamp(1.9rem, 4.8vw, 3.25rem)", color: "#efefef", fontFamily: "'Unbounded', sans-serif", letterSpacing: "-0.03em" }}
           >
             Find out how much revenue
             <br />
@@ -271,8 +300,8 @@ function LandingView({
           </h1>
 
           {/* Subheadline */}
-          <p className="text-lg leading-relaxed mb-12 max-w-lg mx-auto" style={{ color: "#6b6b80" }}>
-            Enter your URL. We'll score it against the signals that determine whether
+          <p className="text-lg leading-relaxed mb-12 max-w-lg mx-auto" style={{ color: "#5a5a5a" }}>
+            Enter your URL. We score it against the signals that determine whether
             visitors convert, search traffic compounds, and paid ads actually work.
           </p>
 
@@ -280,7 +309,7 @@ function LandingView({
           <form onSubmit={onSubmit} className="w-full max-w-xl mx-auto">
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="flex-1 relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "#3a3a50" }}>
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "#303030" }}>
                   <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
                     <path d="M6.5 1a5.5 5.5 0 1 0 3.536 9.574l3.196 3.195a.75.75 0 1 0 1.06-1.06L11.096 9.51A5.5 5.5 0 0 0 6.5 1Zm-4 5.5a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z" fill="currentColor" />
                   </svg>
@@ -291,7 +320,7 @@ function LandingView({
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder="yourdomain.com"
                   className="w-full input-focus rounded-xl pl-10 pr-4 py-4 text-base transition-all"
-                  style={{ background: "#0d0d14", border: "1px solid #1e1e2e", color: "#f0f0fa" }}
+                  style={{ background: "#0e0e0e", border: "1px solid #1c1c1c", color: "#efefef" }}
                   autoFocus
                   autoComplete="off"
                   autoCapitalize="none"
@@ -300,20 +329,20 @@ function LandingView({
               </div>
               <button
                 type="submit"
-                className="rounded-xl font-semibold px-7 py-4 transition-all duration-200 whitespace-nowrap flex items-center justify-center gap-2 text-base"
-                style={{ background: "#204ce5", color: "#fff", minWidth: 180, letterSpacing: "0.07em", textTransform: "uppercase" }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "#1a3dc4")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "#204ce5")}
+                className="rounded-xl font-semibold px-7 py-4 transition-all duration-200 whitespace-nowrap flex items-center justify-center gap-2 text-sm"
+                style={{ background: "#c0392b", color: "#fff", minWidth: 180, letterSpacing: "0.07em", textTransform: "uppercase" }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#a93226")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "#c0392b")}
               >
                 Score My Website
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
                   <path d="M3 7h8M7.5 3.5 11 7l-3.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </button>
             </div>
 
             {error && (
-              <div className="mt-3 flex items-center gap-2 text-sm rounded-lg px-4 py-3" style={{ color: "#f87171", background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)" }}>
+              <div className="mt-3 flex items-center gap-2 text-sm rounded-lg px-4 py-3" style={{ color: "#f87171", background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.12)" }}>
                 <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
                   <path d="M6.5 1a5.5 5.5 0 1 0 0 11A5.5 5.5 0 0 0 6.5 1Zm0 8.25a.625.625 0 1 1 0-1.25.625.625 0 0 1 0 1.25ZM6.5 3v3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
                 </svg>
@@ -322,14 +351,14 @@ function LandingView({
             )}
           </form>
 
-          <p className="mt-5 text-xs" style={{ color: "#3a3a50" }}>
+          <p className="mt-5 text-xs" style={{ color: "#2e2e2e" }}>
             30-second diagnostic &nbsp;&bull;&nbsp; No account required &nbsp;&bull;&nbsp; Used by growth teams
           </p>
         </div>
 
         {/* Category preview */}
         <div className="mt-20 max-w-3xl w-full mx-auto px-4">
-          <p className="text-center text-xs font-medium uppercase mb-8" style={{ color: "#3a3a50", letterSpacing: "0.14em" }}>
+          <p className="text-center text-xs font-medium uppercase mb-8" style={{ color: "#2e2e2e", letterSpacing: "0.14em" }}>
             What Gets Scored
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -337,12 +366,12 @@ function LandingView({
               <div
                 key={key}
                 className="rounded-xl p-4 text-center card-hover"
-                style={{ background: "#0d0d14", border: "1px solid #1e1e2e" }}
+                style={{ background: "#0e0e0e", border: "1px solid #1c1c1c" }}
               >
-                <div className="flex justify-center mb-2" style={{ color: "#204ce5" }}>
+                <div className="flex justify-center mb-2" style={{ color: "#484848" }}>
                   {meta.icon}
                 </div>
-                <p className="text-xs font-medium" style={{ color: "#a0a0b8" }}>{meta.label}</p>
+                <p className="text-xs font-medium" style={{ color: "#484848" }}>{meta.label}</p>
               </div>
             ))}
           </div>
@@ -358,72 +387,81 @@ function LandingView({
 
 function AnalyzingView({ url, scanStep }: { url: string; scanStep: number }) {
   const domain = extractDomain(url);
+  const progress = Math.round(((scanStep + 1) / SCAN_STEPS.length) * 94);
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4" style={{ background: "#07070b" }}>
+    <div className="min-h-screen flex flex-col items-center justify-center px-4" style={{ background: "#080808" }}>
       <div className="max-w-sm w-full text-center">
 
         {/* Pulse ring */}
         <div className="relative inline-flex items-center justify-center mb-10">
           <div
             className="absolute w-24 h-24 rounded-full scan-pulse"
-            style={{ background: "radial-gradient(circle, rgba(32,76,229,0.12) 0%, transparent 70%)", border: "1px solid rgba(32,76,229,0.15)" }}
+            style={{
+              background: "radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%)",
+              border: "1px solid rgba(255,255,255,0.06)",
+            }}
           />
           <div
             className="w-16 h-16 rounded-2xl flex items-center justify-center"
-            style={{ background: "#0d0d14", border: "1px solid #1e1e2e" }}
+            style={{ background: "#111111", border: "1px solid #222222" }}
           >
-            <svg width="28" height="28" viewBox="0 0 18 18" fill="none">
-              <path d="M3 9L7.5 4.5L12 9L9 9L9 13.5L6 13.5L6 9L3 9Z" fill="#204ce5" />
-              <path d="M9 9L13.5 4.5L15 6L11 9L15 9L15 13.5L12 13.5L12 9L9 9Z" fill="#204ce5" opacity=".5" />
+            <svg width="26" height="26" viewBox="0 0 18 18" fill="none">
+              <path d="M3 9L7.5 4.5L12 9L9 9L9 13.5L6 13.5L6 9L3 9Z" fill="#efefef" />
+              <path d="M9 9L13.5 4.5L15 6L11 9L15 9L15 13.5L12 13.5L12 9L9 9Z" fill="#efefef" opacity=".4" />
             </svg>
           </div>
         </div>
 
-        <h2 className="text-xl font-semibold mb-2" style={{ color: "#f0f0fa" }}>
+        <h2 className="text-xl font-semibold mb-1.5" style={{ color: "#efefef", fontFamily: "'Unbounded', sans-serif", fontSize: "1rem", letterSpacing: "-0.01em" }}>
           Analyzing your website
         </h2>
-        <p className="text-sm mb-8" style={{ color: "#4b4b60" }}>
+        <p className="text-sm mb-8" style={{ color: "#3a3a3a" }}>
           {domain}
         </p>
 
         {/* Progress bar */}
-        <div className="w-full rounded-full overflow-hidden mb-8" style={{ background: "#1e1e2e", height: 3 }}>
+        <div className="w-full rounded-full overflow-hidden mb-8" style={{ background: "#181818", height: 2 }}>
           <div
-            className="h-full rounded-full progress-sweep"
-            style={{ background: "linear-gradient(90deg, #204ce5, #527eff)" }}
+            className="h-full rounded-full transition-all duration-700"
+            style={{
+              width: `${progress}%`,
+              background: "linear-gradient(90deg, #555555, #888888)",
+              transition: "width 0.9s cubic-bezier(0.4, 0, 0.2, 1)",
+            }}
           />
         </div>
 
         {/* Scan steps */}
-        <div className="space-y-2 text-left">
+        <div className="space-y-1.5 text-left">
           {SCAN_STEPS.map((step, i) => {
             const isDone = i < scanStep;
             const isCurrent = i === scanStep;
             return (
               <div
                 key={step}
-                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all duration-300 step-appear`}
+                className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all duration-500 step-appear"
                 style={{
                   opacity: isDone || isCurrent ? 1 : 0.2,
-                  background: isCurrent ? "rgba(32,76,229,0.06)" : "transparent",
-                  border: isCurrent ? "1px solid rgba(32,76,229,0.12)" : "1px solid transparent",
-                  color: isDone ? "#6b6b80" : isCurrent ? "#f0f0fa" : "#3a3a50",
-                  animationDelay: `${i * 0.05}s`,
+                  background: isCurrent ? "rgba(255,255,255,0.025)" : "transparent",
+                  border: isCurrent ? "1px solid rgba(255,255,255,0.05)" : "1px solid transparent",
+                  color: isDone ? "#383838" : isCurrent ? "#c8c8c8" : "#2e2e2e",
+                  animationDelay: `${i * 0.04}s`,
                 }}
               >
                 {isDone ? (
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <path d="M2.5 7L5.5 10 11.5 4" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
+                    <path d="M2.5 7L5.5 10 11.5 4" stroke="#484848" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 ) : isCurrent ? (
-                  <svg className="spinner" width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <circle cx="7" cy="7" r="5" stroke="#204ce5" strokeWidth="1.5" strokeOpacity=".25" />
-                    <path d="M7 2A5 5 0 0 1 12 7" stroke="#204ce5" strokeWidth="1.5" strokeLinecap="round" />
+                  <svg className="spinner" width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
+                    <circle cx="7" cy="7" r="5" stroke="#333333" strokeWidth="1.5" />
+                    <path d="M7 2A5 5 0 0 1 12 7" stroke="#888888" strokeWidth="1.5" strokeLinecap="round" />
                   </svg>
                 ) : (
-                  <div className="w-3.5 h-3.5 rounded-full" style={{ background: "#1e1e2e", flexShrink: 0 }} />
+                  <div className="w-3.5 h-3.5 rounded-full flex-shrink-0" style={{ background: "#1c1c1c" }} />
                 )}
-                {step}
+                <span style={{ fontSize: "0.8125rem" }}>{step}</span>
               </div>
             );
           })}
@@ -450,16 +488,15 @@ function GateView({
   const g = GRADE_STYLE[report.overall_grade] ?? GRADE_STYLE["C"];
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden" style={{ background: "#07070b" }}>
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden" style={{ background: "#080808" }}>
 
       {/* Blurred results preview in background */}
       <div
         className="absolute inset-0 flex items-center justify-center pointer-events-none"
-        style={{ filter: "blur(24px)", opacity: 0.18, transform: "scale(1.08)" }}
+        style={{ filter: "blur(24px)", opacity: 0.12, transform: "scale(1.08)" }}
         aria-hidden="true"
       >
         <div className="max-w-md w-full px-8">
-          {/* Blurred grade circle */}
           <div className="flex justify-center mb-8">
             <div
               style={{
@@ -473,13 +510,12 @@ function GateView({
               {report.overall_grade}
             </div>
           </div>
-          {/* Blurred category cards */}
           <div className="grid grid-cols-2 gap-3">
             {Object.entries(report.category_grades).map(([key, grade]) => {
               const gs = GRADE_STYLE[grade] ?? GRADE_STYLE["C"];
               return (
-                <div key={key} style={{ background: "#0d0d14", border: "1px solid #1e1e2e", borderRadius: 12, padding: "14px 16px" }}>
-                  <div className="text-xs mb-1" style={{ color: "#4b4b60" }}>{CATEGORY_META[key]?.label}</div>
+                <div key={key} style={{ background: "#0e0e0e", border: "1px solid #1c1c1c", borderRadius: 12, padding: "14px 16px" }}>
+                  <div className="text-xs mb-1" style={{ color: "#3a3a3a" }}>{CATEGORY_META[key]?.label}</div>
                   <div className="text-2xl font-bold" style={{ color: gs.color }}>{grade}</div>
                 </div>
               );
@@ -492,33 +528,33 @@ function GateView({
       <div
         className="relative z-10 w-full max-w-md animate-fade-in-up"
         style={{
-          background: "rgba(13,13,20,0.96)",
-          border: "1px solid #1e1e2e",
+          background: "rgba(10,10,10,0.97)",
+          border: "1px solid #1c1c1c",
           borderRadius: 20,
           padding: "40px 36px",
-          backdropFilter: "blur(12px)",
-          boxShadow: "0 0 60px rgba(0,0,0,0.6)",
+          backdropFilter: "blur(16px)",
+          boxShadow: "0 0 80px rgba(0,0,0,0.7)",
         }}
       >
         {/* Lock icon */}
         <div className="flex justify-center mb-6">
           <div
-            style={{ width: 52, height: 52, borderRadius: 14, background: "#0d0d14", border: "1px solid #1e1e2e", display: "flex", alignItems: "center", justifyContent: "center" }}
+            style={{ width: 48, height: 48, borderRadius: 12, background: "#111111", border: "1px solid #1c1c1c", display: "flex", alignItems: "center", justifyContent: "center" }}
           >
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-              <rect x="4" y="10" width="14" height="10" rx="2.5" stroke="#204ce5" strokeWidth="1.5" />
-              <path d="M7 10V7a4 4 0 0 1 8 0v3" stroke="#204ce5" strokeWidth="1.5" strokeLinecap="round" />
-              <circle cx="11" cy="15" r="1.25" fill="#204ce5" />
+            <svg width="20" height="20" viewBox="0 0 22 22" fill="none">
+              <rect x="4" y="10" width="14" height="10" rx="2.5" stroke="#555555" strokeWidth="1.5" />
+              <path d="M7 10V7a4 4 0 0 1 8 0v3" stroke="#555555" strokeWidth="1.5" strokeLinecap="round" />
+              <circle cx="11" cy="15" r="1.25" fill="#555555" />
             </svg>
           </div>
         </div>
 
         <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold mb-2" style={{ color: "#f0f0fa" }}>
+          <h2 className="text-xl font-bold mb-2.5" style={{ color: "#efefef", fontFamily: "'Unbounded', sans-serif", fontSize: "1.125rem", letterSpacing: "-0.02em" }}>
             Your Revenue Score is ready.
           </h2>
-          <p className="text-sm leading-relaxed" style={{ color: "#6b6b80" }}>
-            We've completed a diagnostic of <span style={{ color: "#a0a0b8", fontWeight: 500 }}>{domain}</span>.
+          <p className="text-sm leading-relaxed" style={{ color: "#5a5a5a" }}>
+            We've completed a diagnostic of <span style={{ color: "#888888", fontWeight: 500 }}>{domain}</span>.
             Enter your work email to unlock your score and strategic insights.
           </p>
         </div>
@@ -527,14 +563,14 @@ function GateView({
         <div className="flex items-center justify-center gap-3 mb-8">
           <div
             className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium"
-            style={{ background: "#111118", border: "1px solid #1e1e2e", color: "#6b6b80" }}
+            style={{ background: "#111111", border: "1px solid #1c1c1c", color: "#484848" }}
           >
             <div className="w-1.5 h-1.5 rounded-full" style={{ background: g.color }} />
-            <span style={{ letterSpacing: "0.07em", textTransform: "uppercase" }}>Overall Grade: Hidden</span>
+            <span style={{ letterSpacing: "0.06em", textTransform: "uppercase" }}>Overall Grade: Hidden</span>
           </div>
           <div
             className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium"
-            style={{ background: "#111118", border: "1px solid #1e1e2e", color: "#6b6b80" }}
+            style={{ background: "#111111", border: "1px solid #1c1c1c", color: "#484848" }}
           >
             4 Categories
           </div>
@@ -548,13 +584,13 @@ function GateView({
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@company.com"
             className="w-full input-focus-blue rounded-xl px-4 py-3.5 text-sm mb-3 transition-all"
-            style={{ background: "#111118", border: "1px solid #1e1e2e", color: "#f0f0fa" }}
+            style={{ background: "#111111", border: "1px solid #1c1c1c", color: "#efefef" }}
             autoFocus
             autoComplete="email"
           />
 
           {emailError && (
-            <div className="mb-3 text-xs px-3 py-2 rounded-lg" style={{ color: "#f87171", background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.12)" }}>
+            <div className="mb-3 text-xs px-3 py-2 rounded-lg" style={{ color: "#f87171", background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.1)" }}>
               {emailError}
             </div>
           )}
@@ -563,14 +599,14 @@ function GateView({
             type="submit"
             disabled={submitting}
             className="w-full rounded-xl font-semibold py-3.5 text-sm transition-all duration-200 flex items-center justify-center gap-2"
-            style={{ background: "#204ce5", color: "#fff", opacity: submitting ? 0.7 : 1, letterSpacing: "0.07em", textTransform: "uppercase" }}
-            onMouseEnter={(e) => { if (!submitting) e.currentTarget.style.background = "#1a3dc4"; }}
-            onMouseLeave={(e) => { if (!submitting) e.currentTarget.style.background = "#204ce5"; }}
+            style={{ background: "#c0392b", color: "#fff", opacity: submitting ? 0.65 : 1, letterSpacing: "0.07em", textTransform: "uppercase" }}
+            onMouseEnter={(e) => { if (!submitting) e.currentTarget.style.background = "#a93226"; }}
+            onMouseLeave={(e) => { if (!submitting) e.currentTarget.style.background = "#c0392b"; }}
           >
             {submitting ? (
               <>
                 <svg className="spinner" width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" strokeOpacity=".25" />
+                  <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" strokeOpacity=".2" />
                   <path d="M7 2A5 5 0 0 1 12 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                 </svg>
                 Unlocking...
@@ -578,7 +614,7 @@ function GateView({
             ) : (
               <>
                 Reveal My Score
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
                   <path d="M3 7h8M7.5 3.5 11 7l-3.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </>
@@ -586,7 +622,7 @@ function GateView({
           </button>
         </form>
 
-        <p className="mt-4 text-center text-xs" style={{ color: "#3a3a50" }}>
+        <p className="mt-4 text-center text-xs" style={{ color: "#2e2e2e" }}>
           Used to deliver your score. SpeedX may send relevant strategic follow-up.
         </p>
       </div>
@@ -602,18 +638,18 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
   const rev = REVENUE_META[report.revenue_opportunity] ?? REVENUE_META["Moderate"];
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#07070b" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: "#080808" }}>
       {/* Header */}
-      <header style={{ borderBottom: "1px solid #16161f" }} className="px-6 py-4 sticky top-0 z-10" css-bkdrop="true">
-        <div style={{ backdropFilter: "blur(12px)", background: "rgba(7,7,11,0.85)", position: "absolute", inset: 0 }} />
+      <header style={{ borderBottom: "1px solid #161616" }} className="px-6 py-4 sticky top-0 z-10">
+        <div style={{ backdropFilter: "blur(12px)", background: "rgba(8,8,8,0.88)", position: "absolute", inset: 0 }} />
         <div className="max-w-3xl mx-auto flex items-center justify-between relative z-10">
           <Logo />
           <button
             onClick={onReset}
             className="text-sm flex items-center gap-2 px-4 py-2 rounded-lg transition-all"
-            style={{ color: "#6b6b80", border: "1px solid #1e1e2e", background: "transparent" }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = "#f0f0fa"; e.currentTarget.style.borderColor = "#2e2e42"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = "#6b6b80"; e.currentTarget.style.borderColor = "#1e1e2e"; }}
+            style={{ color: "#484848", border: "1px solid #1c1c1c", background: "transparent" }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = "#888888"; e.currentTarget.style.borderColor = "#2a2a2a"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = "#484848"; e.currentTarget.style.borderColor = "#1c1c1c"; }}
           >
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
               <path d="M6.5 2L2 6.5 6.5 11M2 6.5h9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
@@ -628,40 +664,39 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
 
           {/* ── Overall Grade ── */}
           <div className="text-center mb-12 animate-fade-in-up">
-            <p className="text-xs font-medium uppercase mb-6" style={{ color: "#3a3a50", letterSpacing: "0.14em" }}>
+            <p className="text-xs font-medium uppercase mb-6" style={{ color: "#2e2e2e", letterSpacing: "0.14em" }}>
               Website Revenue Score
             </p>
 
-            {/* Grade circle */}
             <div className="inline-flex items-center justify-center mb-6">
               <div
                 className={`grade-reveal ${overall.glow}`}
                 style={{
                   width: 130, height: 130, borderRadius: "50%",
-                  border: `2px solid ${overall.color}`,
+                  border: `1.5px solid ${overall.color}`,
                   background: overall.bg,
                   display: "flex", flexDirection: "column",
                   alignItems: "center", justifyContent: "center",
                 }}
               >
-                <span style={{ fontSize: 64, fontWeight: 800, lineHeight: 1, color: overall.color }}>
+                <span style={{ fontSize: 64, fontWeight: 800, lineHeight: 1, color: overall.color, fontFamily: "'Unbounded', sans-serif" }}>
                   {report.overall_grade}
                 </span>
-                <span className="text-xs font-medium" style={{ color: overall.color, opacity: 0.7, marginTop: 2 }}>
+                <span className="text-xs font-medium" style={{ color: overall.color, opacity: 0.6, marginTop: 3, letterSpacing: "0.06em" }}>
                   {overall.label}
                 </span>
               </div>
             </div>
 
-            <p className="text-sm mb-3" style={{ color: "#4b4b60" }}>{domain}</p>
-            <p className="text-base leading-relaxed max-w-lg mx-auto" style={{ color: "#8b8b9e" }}>
+            <p className="text-sm mb-3" style={{ color: "#3a3a3a" }}>{domain}</p>
+            <p className="text-base leading-relaxed max-w-lg mx-auto" style={{ color: "#7a7a7a" }}>
               {report.headline}
             </p>
           </div>
 
           {/* ── Category Grades ── */}
           <div className="mb-10 animate-fade-in-up animation-delay-200">
-            <p className="text-xs font-medium uppercase mb-5" style={{ color: "#3a3a50", letterSpacing: "0.14em" }}>
+            <p className="text-xs font-medium uppercase mb-5" style={{ color: "#2e2e2e", letterSpacing: "0.14em" }}>
               Category Breakdown
             </p>
             <div className="grid grid-cols-2 gap-3">
@@ -673,29 +708,32 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
                   <>
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-2">
-                        <div style={{ color: gs.color, opacity: 0.7 }}>{meta?.icon}</div>
-                        <span className="text-xs font-medium" style={{ color: "#6b6b80" }}>
+                        <div style={{ color: gs.color, opacity: 0.6 }}>{meta?.icon}</div>
+                        <span className="text-xs font-medium" style={{ color: "#484848" }}>
                           {meta?.label}
                         </span>
                       </div>
                       {hasInsight && (
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ color: "#3a3a50", flexShrink: 0, marginTop: 1 }}>
+                        <svg width="11" height="11" viewBox="0 0 12 12" fill="none" style={{ color: "#2e2e2e", flexShrink: 0, marginTop: 1 }}>
                           <path d="M6 1v10M6 11l-3-3M6 11l3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                       )}
                     </div>
                     <div className="flex items-end justify-between">
                       <div>
-                        <div className="text-5xl font-bold leading-none" style={{ color: gs.color }}>
+                        <div
+                          className="text-5xl font-bold leading-none"
+                          style={{ color: gs.color, fontFamily: "'Unbounded', sans-serif" }}
+                        >
                           {grade}
                         </div>
-                        <div className="text-xs mt-1" style={{ color: "#4b4b60" }}>
+                        <div className="text-xs mt-1.5" style={{ color: "#3a3a3a", letterSpacing: "0.04em" }}>
                           {gs.label}
                         </div>
                       </div>
                       <div className="flex flex-col-reverse gap-1">
                         {["F", "D", "C", "B", "A"].map((g) => (
-                          <div key={g} className="w-2 rounded-sm" style={{ height: 6, background: g === grade ? gs.color : "#1e1e2e", opacity: g === grade ? 1 : 0.5 }} />
+                          <div key={g} className="w-1.5 rounded-sm" style={{ height: 5, background: g === grade ? gs.color : "#1c1c1c", opacity: g === grade ? 1 : 0.6 }} />
                         ))}
                       </div>
                     </div>
@@ -703,7 +741,7 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
                 );
 
                 const sharedStyle: React.CSSProperties = {
-                  background: "#0d0d14",
+                  background: "#0e0e0e",
                   border: `1px solid ${gs.border}`,
                   display: "block",
                   textDecoration: "none",
@@ -715,7 +753,7 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
                     href={`#insight-${key}`}
                     className={`rounded-2xl p-5 card-hover animate-fade-in-up animation-delay-${(i + 2) * 100}`}
                     style={{ ...sharedStyle, cursor: "pointer" }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#204ce5"; }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#303030"; }}
                     onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = gs.border; }}
                   >
                     {cardContent}
@@ -735,7 +773,7 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
 
           {/* ── Strategic Insights ── */}
           <div className="mb-10 animate-fade-in-up animation-delay-400">
-            <p className="text-xs font-medium uppercase mb-5" style={{ color: "#3a3a50", letterSpacing: "0.14em" }}>
+            <p className="text-xs font-medium uppercase mb-5" style={{ color: "#2e2e2e", letterSpacing: "0.14em" }}>
               What the Score Reveals
             </p>
             <div className="space-y-3">
@@ -746,19 +784,19 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
                     key={i}
                     id={insight.category !== "general" ? `insight-${insight.category}` : undefined}
                     className="insight-card px-5 py-4 rounded-xl"
-                    style={{ background: "#0d0d14", border: "1px solid #1e1e2e", borderLeft: "3px solid #1e1e2e", scrollMarginTop: "80px" }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderLeftColor = "#f97316"; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderLeftColor = "#1e1e2e"; }}
+                    style={{ background: "#0e0e0e", border: "1px solid #1c1c1c", borderLeft: "2px solid #1c1c1c", scrollMarginTop: "80px" }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderLeftColor = "#3a3a3a"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderLeftColor = "#1c1c1c"; }}
                   >
                     {meta && (
                       <div className="flex items-center gap-1.5 mb-2.5">
-                        <span style={{ color: "#4b4b60" }}>{meta.icon}</span>
-                        <span className="text-xs font-medium uppercase" style={{ color: "#4b4b60", letterSpacing: "0.1em" }}>
+                        <span style={{ color: "#3a3a3a" }}>{meta.icon}</span>
+                        <span className="text-xs font-medium uppercase" style={{ color: "#3a3a3a", letterSpacing: "0.1em" }}>
                           {meta.label}
                         </span>
                       </div>
                     )}
-                    <p className="text-sm leading-relaxed" style={{ color: "#8b8b9e" }}>
+                    <p className="text-sm leading-relaxed" style={{ color: "#7a7a7a" }}>
                       {insight.text}
                     </p>
                   </div>
@@ -769,27 +807,26 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
 
           {/* ── Revenue Opportunity ── */}
           <div className="mb-12 animate-fade-in-up animation-delay-500">
-            <p className="text-xs font-medium uppercase mb-5" style={{ color: "#3a3a50", letterSpacing: "0.14em" }}>
+            <p className="text-xs font-medium uppercase mb-5" style={{ color: "#2e2e2e", letterSpacing: "0.14em" }}>
               Revenue Opportunity Signal
             </p>
             <div
               className="rounded-2xl px-6 py-5 flex items-center gap-5"
-              style={{ background: "#0d0d14", border: "1px solid #1e1e2e" }}
+              style={{ background: "#0e0e0e", border: "1px solid #1c1c1c" }}
             >
-              {/* Dots */}
               <div className="flex items-center gap-2 flex-shrink-0">
                 {["Low", "Moderate", "High"].map((level) => (
                   <div
                     key={level}
-                    className="w-3 h-3 rounded-full transition-all"
+                    className="w-3 h-3 rounded-full transition-all duration-300"
                     style={{
                       background: level === report.revenue_opportunity
-                        ? (REVENUE_META[level]?.textColor ?? "#f97316")
-                        : "#1e1e2e",
+                        ? (REVENUE_META[level]?.textColor ?? "#888888")
+                        : "#1c1c1c",
                       boxShadow: level === report.revenue_opportunity
-                        ? `0 0 8px ${REVENUE_META[level]?.textColor ?? "#f97316"}80`
+                        ? `0 0 8px ${REVENUE_META[level]?.textColor ?? "#888888"}70`
                         : "none",
-                      transform: level === report.revenue_opportunity ? "scale(1.25)" : "scale(1)",
+                      transform: level === report.revenue_opportunity ? "scale(1.3)" : "scale(1)",
                     }}
                   />
                 ))}
@@ -800,7 +837,7 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
                     {rev.label} Opportunity
                   </span>
                 </div>
-                <p className="text-sm" style={{ color: "#6b6b80" }}>{rev.description}</p>
+                <p className="text-sm" style={{ color: "#5a5a5a" }}>{rev.description}</p>
               </div>
             </div>
           </div>
@@ -808,48 +845,51 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
           {/* ── CTA ── */}
           <div
             className="rounded-2xl p-8 text-center animate-fade-in-up animation-delay-600"
-            style={{ background: "linear-gradient(135deg, #0d0d14 0%, #111118 100%)", border: "1px solid #1e1e2e", position: "relative", overflow: "hidden" }}
+            style={{ background: "#0e0e0e", border: "1px solid #1c1c1c", position: "relative", overflow: "hidden" }}
           >
-            {/* Ambient glow */}
+            {/* Subtle top edge highlight */}
             <div
               style={{
-                position: "absolute", top: -40, right: -40, width: 180, height: 180,
-                background: "radial-gradient(circle, rgba(32,76,229,0.1) 0%, transparent 70%)",
+                position: "absolute", top: 0, left: "20%", right: "20%", height: 1,
+                background: "linear-gradient(90deg, transparent, #2a2a2a, transparent)",
                 pointerEvents: "none",
               }}
             />
 
             <div
               className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium mb-5"
-              style={{ background: "rgba(32,76,229,0.08)", border: "1px solid rgba(32,76,229,0.2)", color: "#527eff", letterSpacing: "0.1em", textTransform: "uppercase" }}
+              style={{ background: "#131313", border: "1px solid #222222", color: "#555555", letterSpacing: "0.1em", textTransform: "uppercase" }}
             >
-              <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+              <svg width="9" height="9" viewBox="0 0 11 11" fill="none">
                 <path d="M5.5 1L6.8 4.2H10.3L7.5 6.3 8.5 9.7 5.5 7.8 2.5 9.7 3.5 6.3.7 4.2H4.2Z" fill="currentColor" />
               </svg>
               Full Revenue Activation Plan
             </div>
 
-            <h3 className="text-2xl font-bold mb-3" style={{ color: "#f0f0fa", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            <h3
+              className="text-2xl font-bold mb-3"
+              style={{ color: "#efefef", textTransform: "uppercase", letterSpacing: "0.04em", fontFamily: "'Unbounded', sans-serif", fontSize: "1.125rem" }}
+            >
               {report.cta_title}
             </h3>
-            <p className="text-sm leading-relaxed mb-7 max-w-sm mx-auto" style={{ color: "#6b6b80" }}>
+            <p className="text-sm leading-relaxed mb-7 max-w-sm mx-auto" style={{ color: "#5a5a5a" }}>
               {report.cta_body}
             </p>
 
             <a
-              href="mailto:hello@speedx.io?subject=Revenue%20Activation%20Plan%20Request"
+              href="mailto:hello@speedxmedia.com?subject=Revenue%20Activation%20Plan%20Request"
               className="inline-flex items-center gap-2 rounded-xl font-semibold px-8 py-4 text-sm transition-all duration-200"
-              style={{ background: "#f97316", color: "#fff", letterSpacing: "0.07em", textTransform: "uppercase" }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#ea6c10"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "#f97316"; }}
+              style={{ background: "#c0392b", color: "#fff", letterSpacing: "0.07em", textTransform: "uppercase" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#a93226"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "#c0392b"; }}
             >
               Request a Strategy Call
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
                 <path d="M3 7h8M7.5 3.5 11 7l-3.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </a>
 
-            <p className="mt-4 text-xs" style={{ color: "#3a3a50" }}>
+            <p className="mt-4 text-xs" style={{ color: "#2e2e2e" }}>
               No obligation &nbsp;&bull;&nbsp; Strategy-first conversation
             </p>
           </div>
@@ -866,17 +906,20 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
 
 function Footer() {
   return (
-    <footer className="px-6 py-8" style={{ borderTop: "1px solid #16161f" }}>
+    <footer className="px-6 py-8" style={{ borderTop: "1px solid #161616" }}>
       <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
         <Logo size="sm" />
-        <p className="text-xs text-center" style={{ color: "#2e2e42" }}>
-          &copy; {new Date().getFullYear()} SpeedX. Results are diagnostic estimates based on publicly accessible page data.
+        <p className="text-xs text-center" style={{ color: "#282828" }}>
+          &copy; {new Date().getFullYear()} SpeedX Media. Results are diagnostic estimates based on publicly accessible page data.
         </p>
-        <a href="mailto:hello@speedx.io" className="text-xs transition-colors" style={{ color: "#3a3a50" }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#f97316"; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "#3a3a50"; }}
+        <a
+          href="mailto:hello@speedxmedia.com"
+          className="text-xs transition-colors"
+          style={{ color: "#2e2e2e" }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#888888"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "#2e2e2e"; }}
         >
-          hello@speedx.io
+          hello@speedxmedia.com
         </a>
       </div>
     </footer>
