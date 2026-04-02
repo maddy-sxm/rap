@@ -163,6 +163,28 @@ export default function Home() {
     setAppState("analyzing");
     setScanStep(0);
 
+    // Fire soft lead — once, non-blocking, does not affect the grading flow.
+    // Reads UTMs from sessionStorage (captured on landing page load).
+    (() => {
+      let utms: Record<string, string> = {};
+      try {
+        const stored = sessionStorage.getItem("speedx_utms");
+        if (stored) utms = JSON.parse(stored);
+      } catch { /* ignore */ }
+      const params = new URLSearchParams(window.location.search);
+      const utmKeys = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"] as const;
+      for (const k of utmKeys) { if (!utms[k]) utms[k] = params.get(k) ?? ""; }
+      fetch("/api/soft-lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          submissionId: crypto.randomUUID(),
+          website: trimmed,
+          ...utms,
+        }),
+      }).catch(() => {});
+    })();
+
     // Start API fetch immediately — runs in parallel with the animation
     const apiFetch = fetch("/api/grade", {
       method: "POST",
@@ -1156,6 +1178,8 @@ function StrategyCallModal({
     submitInFlight.current = true;
     setSubmitting(true);
     console.log(`[StrategyCallModal] Submitting — id: ${currentId}`);
+    console.log(`[StrategyCallModal] UTMs being sent:`, JSON.stringify(utms));
+    console.log(`[StrategyCallModal] sessionStorage speedx_utms:`, sessionStorage.getItem("speedx_utms"));
 
     try {
       const res = await fetch("/api/strategy-call", {

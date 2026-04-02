@@ -53,5 +53,38 @@
     "callId": "ff78a9d9-c6d3-43f3-a26d-5365be87ceb7",
     "timestamp": "2026-04-02T18:00:25.317Z",
     "source": "strategy_call"
+  },
+  {
+    "leadId": null,
+    "name": "Jane Smith",
+    "contact_email": "jane@company.com",
+    "business_name": "Acme Inc",
+    "industry": "",
+    "website": "acme.com",
+    "callId": "09c1931b-b23e-4ed1-81cf-be255e2adee5",
+    "timestamp": "2026-04-02T18:06:42.112Z",
+    "source": "strategy_call"
+  },
+  {
+    "leadId": "ae72c879-92c3-411d-880f-7d85a6b5fbd1",
+    "name": "hey hey hey",
+    "contact_email": "weird@weird.com",
+    "business_name": "hey hey",
+    "industry": "hey",
+    "website": "weird.com",
+    "callId": "6347c40a-d86d-4860-9f96-42c49b95d2ad",
+    "timestamp": "2026-04-02T18:12:32.909Z",
+    "source": "strategy_call"
+  },
+  {
+    "leadId": null,
+    "name": "Jane Smith",
+    "contact_email": "jane@acme.com",
+    "business_name": "Acme Inc",
+    "industry": "",
+    "website": "acme.com",
+    "callId": "26b1ad2f-be54-4449-be05-9cb55ea7ac3a",
+    "timestamp": "2026-04-02T18:26:00.921Z",
+    "source": "strategy_call"
   }
 ]

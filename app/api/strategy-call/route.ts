@@ -31,7 +31,7 @@ function isDuplicate(id: string): boolean {
 // ── Webhook ───────────────────────────────────────────────────────────────────
 
 const SHEET_WEBHOOK =
-  "https://script.google.com/macros/s/AKfycbxyhGMnwjqL3JEG8mvjzrfgHN5GXz4WS8Nrc32byAqtzBEwrZWW1_pS2OsZvbzzXL3M/exec";
+  "https://script.google.com/macros/s/AKfycbwylUXPs3O38ItVnZJw9xph_5q4JXgvxjLiRd5csoOsRZm1eBd_UMRpvHcf1HoeyGAyEw/exec";
 
 async function fireWebhook(
   submissionId: string,
@@ -41,28 +41,16 @@ async function fireWebhook(
   console.log(`[strategy-call][${submissionId}] Payload: ${JSON.stringify(payload)}`);
 
   try {
-    // redirect:"manual" — do NOT follow GAS's 302. The initial POST is all GAS
-    // needs to run doPost. Following the redirect can re-trigger execution.
     const res = await fetch(SHEET_WEBHOOK, {
       method: "POST",
-      redirect: "manual",
+      redirect: "follow",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
 
-    // With redirect:"manual" a GAS 302 comes back as an opaque redirect (status 0
-    // in some runtimes, or the actual 3xx). Either way the request was received.
-    console.log(
-      `[strategy-call][${submissionId}] Webhook response status: ${res.status} (0 or 3xx = GAS redirect = success)`
-    );
-
-    // Try to read the body if available (won't work on opaque redirects)
-    try {
-      const text = await res.text();
-      if (text) console.log(`[strategy-call][${submissionId}] Webhook response body: ${text}`);
-    } catch {
-      // opaque redirect — no body to read, that is expected
-    }
+    const text = await res.text();
+    console.log(`[strategy-call][${submissionId}] Webhook response status: ${res.status}`);
+    console.log(`[strategy-call][${submissionId}] Webhook response body: ${text}`);
   } catch (err) {
     console.error(`[strategy-call][${submissionId}] Webhook threw:`, err);
   }
@@ -150,6 +138,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   // ── 5. Single webhook — all 9 fields ──────────────────────────────────────
   await fireWebhook(submissionId, {
+    type:         "strategy_call",
     name,
     email,
     business,

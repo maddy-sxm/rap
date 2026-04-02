@@ -30,5 +30,21 @@
     "leadId": "28fcbf9d-8cd2-4f0d-83b1-162ea16c8b6b",
     "timestamp": "2026-04-02T17:22:29.084Z",
     "source": "gate"
+  },
+  {
+    "email": "weird@weird.com",
+    "domain": "weird.com",
+    "submitted_url": "weird.com",
+    "overall_grade": "C",
+    "category_grades": {
+      "website_conversion": "C",
+      "search_visibility": "C",
+      "paid_traffic_readiness": "C",
+      "lead_capture": "C"
+    },
+    "revenue_opportunity": "High",
+    "leadId": "ae72c879-92c3-411d-880f-7d85a6b5fbd1",
+    "timestamp": "2026-04-02T18:12:17.494Z",
+    "source": "gate"
   }
 ]
