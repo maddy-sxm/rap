@@ -46,5 +46,21 @@
     "leadId": "ae72c879-92c3-411d-880f-7d85a6b5fbd1",
     "timestamp": "2026-04-02T18:12:17.494Z",
     "source": "gate"
+  },
+  {
+    "email": "yes@yes.com",
+    "domain": "yes.com",
+    "submitted_url": "yes.com",
+    "overall_grade": "D",
+    "category_grades": {
+      "website_conversion": "F",
+      "search_visibility": "D",
+      "paid_traffic_readiness": "F",
+      "lead_capture": "D"
+    },
+    "revenue_opportunity": "High",
+    "leadId": "ea7b5972-dd91-4555-a85c-d82bb3c39128",
+    "timestamp": "2026-04-02T20:23:25.553Z",
+    "source": "gate"
   }
 ]

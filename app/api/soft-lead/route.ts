@@ -12,7 +12,7 @@ import { NextRequest, NextResponse } from "next/server";
 export const runtime = "nodejs";
 
 const SHEET_WEBHOOK =
-  "https://script.google.com/macros/s/AKfycbwylUXPs3O38ItVnZJw9xph_5q4JXgvxjLiRd5csoOsRZm1eBd_UMRpvHcf1HoeyGAyEw/exec";
+  "https://script.google.com/macros/s/AKfycbxn9XhF01iM_MFZN33_FHW5UEh26ayz2scLwf6Zm14y_InEfUZa57uDv354Vn8TPuJMqA/exec";
 
 // ── Idempotency ───────────────────────────────────────────────────────────────
 const recentSubmissions = new Set<string>();
