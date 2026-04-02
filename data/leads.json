@@ -62,5 +62,21 @@
     "leadId": "ea7b5972-dd91-4555-a85c-d82bb3c39128",
     "timestamp": "2026-04-02T20:23:25.553Z",
     "source": "gate"
+  },
+  {
+    "email": "beep@beep.com",
+    "domain": "beep.com",
+    "submitted_url": "beep.com",
+    "overall_grade": "C",
+    "category_grades": {
+      "website_conversion": "C",
+      "search_visibility": "C",
+      "paid_traffic_readiness": "C",
+      "lead_capture": "C"
+    },
+    "revenue_opportunity": "High",
+    "leadId": "1383e036-bb8f-4acb-b64e-d67eb867931b",
+    "timestamp": "2026-04-02T20:34:04.874Z",
+    "source": "gate"
   }
 ]

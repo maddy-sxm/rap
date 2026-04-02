@@ -826,19 +826,19 @@ function ResultsView({
 
             <div className="inline-flex items-center justify-center mb-6">
               <div
-                className={`grade-reveal ${overall.glow}`}
+                className={`grade-reveal grade-pulse-once ${overall.glow}`}
                 style={{
-                  width: 130, height: 130, borderRadius: "50%",
-                  border: `1.5px solid ${overall.color}`,
+                  width: 172, height: 172, borderRadius: "50%",
+                  border: `2px solid ${overall.color}`,
                   background: overall.bg,
                   display: "flex", flexDirection: "column",
                   alignItems: "center", justifyContent: "center",
                 }}
               >
-                <span style={{ fontSize: 64, fontWeight: 800, lineHeight: 1, color: overall.color, fontFamily: "'Unbounded', sans-serif" }}>
+                <span style={{ fontSize: 76, fontWeight: 800, lineHeight: 1, color: overall.color, fontFamily: "'Unbounded', sans-serif" }}>
                   {report.overall_grade}
                 </span>
-                <span className="text-xs font-medium" style={{ color: overall.color, opacity: 0.6, marginTop: 3, letterSpacing: "0.06em" }}>
+                <span style={{ fontSize: "0.72rem", fontWeight: 500, color: overall.color, marginTop: 6, letterSpacing: "0.08em", whiteSpace: "nowrap" }}>
                   {overall.label}
                 </span>
               </div>
