@@ -159,6 +159,11 @@ body {
   animation: slideInStep 0.35s ease-out forwards;
 }
 
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 @keyframes radarSpin {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }

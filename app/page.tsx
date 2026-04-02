@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, useEffect, FormEvent } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -132,11 +132,27 @@ export default function Home() {
   const [appState, setAppState] = useState<AppState>("landing");
   const [url, setUrl] = useState("");
   const [email, setEmail] = useState("");
+  const [leadId, setLeadId] = useState<string | null>(null);
   const [report, setReport] = useState<GradeReport | null>(null);
   const [urlError, setUrlError] = useState("");
   const [emailError, setEmailError] = useState("");
   const [scanStep, setScanStep] = useState(0);
   const [submittingEmail, setSubmittingEmail] = useState(false);
+
+  // Capture UTM params from the landing URL into sessionStorage on first load.
+  // We only write if UTMs are actually present in the URL so we never overwrite
+  // a previously captured set with empty values (preserves first-touch attribution).
+  useEffect(() => {
+    const SESSION_KEY = "speedx_utms";
+    if (sessionStorage.getItem(SESSION_KEY)) return; // already captured this session
+    const params = new URLSearchParams(window.location.search);
+    const utmKeys = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"] as const;
+    const hasUtms = utmKeys.some((k) => params.get(k));
+    if (!hasUtms) return; // no UTMs on this URL — nothing to store
+    const captured: Record<string, string> = {};
+    for (const k of utmKeys) captured[k] = params.get(k) ?? "";
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(captured));
+  }, []);
 
   async function handleUrlSubmit(e: FormEvent) {
     e.preventDefault();
@@ -202,11 +218,30 @@ export default function Home() {
     }
 
     setSubmittingEmail(true);
-    fetch("/api/capture", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: trimmedEmail, url, report }),
-    }).catch(() => {});
+
+    // Capture the gate lead and store the returned leadId so the strategy
+    // call modal can reference it and tie both submissions together.
+    try {
+      const res = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: trimmedEmail,
+          domain: extractDomain(url),
+          submitted_url: url,
+          overall_grade: report?.overall_grade ?? "",
+          category_grades: report?.category_grades ?? {},
+          revenue_opportunity: report?.revenue_opportunity ?? "",
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setLeadId(data.leadId ?? null);
+      }
+    } catch {
+      // Non-blocking — a network failure here should never prevent the
+      // user from seeing their results.
+    }
 
     await new Promise((r) => setTimeout(r, 300));
     setSubmittingEmail(false);
@@ -217,6 +252,7 @@ export default function Home() {
     setAppState("landing");
     setUrl("");
     setEmail("");
+    setLeadId(null);
     setReport(null);
     setUrlError("");
     setEmailError("");
@@ -242,7 +278,7 @@ export default function Home() {
   }
 
   if (appState === "results" && report) {
-    return <ResultsView report={report} url={url} onReset={reset} />;
+    return <ResultsView report={report} url={url} email={email} leadId={leadId} onReset={reset} />;
   }
 
   return <LandingView url={url} setUrl={setUrl} error={urlError} onSubmit={handleUrlSubmit} />;
@@ -282,8 +318,8 @@ function LandingView({
 
           {/* Badge */}
           <div
-            className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium mb-10"
-            style={{ background: "#0e0e0e", border: "1px solid #1c1c1c", color: "#555555", letterSpacing: "0.13em", textTransform: "uppercase" }}
+            className="inline-flex items-center gap-2 rounded-full px-5 py-2 font-semibold mb-10"
+            style={{ background: "#0e0e0e", border: "1px solid #2a2a2a", color: "#efefef", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "'Unbounded', sans-serif", fontSize: "0.8rem" }}
           >
             <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#c0392b", boxShadow: "0 0 5px rgba(192,57,43,0.7)" }} />
             Revenue Activation Plan
@@ -371,7 +407,7 @@ function LandingView({
                 <div className="flex justify-center mb-2" style={{ color: "#8b3a30" }}>
                   {meta.icon}
                 </div>
-                <p className="text-xs font-medium" style={{ color: "#666666" }}>{meta.label}</p>
+                <p className="text-xs font-medium" style={{ color: "#aaaaaa" }}>{meta.label}</p>
               </div>
             ))}
           </div>
@@ -524,7 +560,7 @@ function AnalyzingView({ url, scanStep }: { url: string; scanStep: number }) {
                 <div style={{ width: 14, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   {isDone ? (
                     <svg width="10" height="10" viewBox="0 0 14 14" fill="none">
-                      <path d="M2.5 7L5.5 10 11.5 4" stroke="#555555" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M2.5 7L5.5 10 11.5 4" stroke="#10b981" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   ) : isCurrent ? (
                     <svg className="spinner" width="10" height="10" viewBox="0 0 14 14" fill="none">
@@ -535,11 +571,11 @@ function AnalyzingView({ url, scanStep }: { url: string; scanStep: number }) {
                     <div style={{ width: 3, height: 3, borderRadius: "50%", background: "#1e1e1e" }} />
                   )}
                 </div>
-                <span style={{ fontSize: "0.9rem", color: isDone ? "#555555" : isCurrent ? "#efefef" : "#555555", letterSpacing: "0.01em", fontWeight: isCurrent ? 500 : 400 }}>
+                <span style={{ fontSize: "0.9rem", color: isDone ? "#10b981" : isCurrent ? "#efefef" : "#555555", letterSpacing: "0.01em", fontWeight: isCurrent ? 500 : 400 }}>
                   {step}
                 </span>
                 {isDone && (
-                  <span style={{ marginLeft: "auto", fontSize: "0.65rem", color: "#484848", letterSpacing: "0.12em" }}>DONE</span>
+                  <span style={{ marginLeft: "auto", fontSize: "0.65rem", color: "#10b981", letterSpacing: "0.12em" }}>DONE</span>
                 )}
               </div>
             );
@@ -633,8 +669,8 @@ function GateView({
           <h2 className="text-xl font-bold mb-2.5" style={{ color: "#efefef", fontFamily: "'Unbounded', sans-serif", fontSize: "1.125rem", letterSpacing: "-0.02em" }}>
             Your Revenue Action Plan Is Ready.
           </h2>
-          <p className="text-sm leading-relaxed" style={{ color: "#5a5a5a" }}>
-            We've completed a diagnostic of <span style={{ color: "#888888", fontWeight: 500 }}>{domain}</span>.
+          <p className="text-sm leading-relaxed" style={{ color: "#888888" }}>
+            We've completed a diagnostic of <span style={{ color: "#bbbbbb", fontWeight: 500 }}>{domain}</span>.
             Enter your work email to unlock your score and strategic insights.
           </p>
         </div>
@@ -712,11 +748,20 @@ function GateView({
 
 // ─── Results View ─────────────────────────────────────────────────────────────
 
-function ResultsView({ report, url, onReset }: { report: GradeReport; url: string; onReset: () => void }) {
+function ResultsView({
+  report, url, email, leadId, onReset,
+}: {
+  report: GradeReport;
+  url: string;
+  email: string;
+  leadId: string | null;
+  onReset: () => void;
+}) {
   const domain = extractDomain(url);
   const overall = GRADE_STYLE[report.overall_grade] ?? GRADE_STYLE["C"];
   const rev = REVENUE_META[report.revenue_opportunity] ?? REVENUE_META["Moderate"];
   const [activeInsight, setActiveInsight] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
 
   function scrollToInsight(category: string) {
     setActiveInsight(category);
@@ -777,7 +822,7 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
               </div>
             </div>
 
-            <p className="text-sm mb-3" style={{ color: "#666666" }}>{domain}</p>
+            <p className="text-sm mb-3" style={{ color: "#888888" }}>{domain}</p>
             <p className="text-base leading-relaxed max-w-lg mx-auto" style={{ color: "#999999" }}>
               {report.headline}
             </p>
@@ -785,7 +830,7 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
 
           {/* ── Category Grades ── */}
           <div className="mb-10 animate-fade-in-up animation-delay-200">
-            <p className="text-xs font-medium uppercase mb-5" style={{ color: "#666666", letterSpacing: "0.14em" }}>
+            <p className="text-xs font-medium uppercase mb-5" style={{ color: "#888888", letterSpacing: "0.14em" }}>
               Category Breakdown
             </p>
             <div className="grid grid-cols-2 gap-3">
@@ -798,12 +843,12 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-2">
                         <div style={{ color: "#8b3a30" }}>{meta?.icon}</div>
-                        <span className="text-xs font-medium" style={{ color: "#777777" }}>
+                        <span className="text-xs font-medium" style={{ color: "#999999" }}>
                           {meta?.label}
                         </span>
                       </div>
                       {hasInsight && (
-                        <svg width="11" height="11" viewBox="0 0 12 12" fill="none" style={{ color: "#555555", flexShrink: 0, marginTop: 1 }}>
+                        <svg width="11" height="11" viewBox="0 0 12 12" fill="none" style={{ color: "#777777", flexShrink: 0, marginTop: 1 }}>
                           <path d="M6 1v10M6 11l-3-3M6 11l3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                       )}
@@ -816,7 +861,7 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
                         >
                           {grade}
                         </div>
-                        <div className="text-xs mt-1.5" style={{ color: "#666666", letterSpacing: "0.04em" }}>
+                        <div className="text-xs mt-1.5" style={{ color: "#888888", letterSpacing: "0.04em" }}>
                           {gs.label}
                         </div>
                       </div>
@@ -857,7 +902,7 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
 
           {/* ── What The Score Reveals ── */}
           <div className="mb-10 animate-fade-in-up animation-delay-400">
-            <p className="text-xs font-medium uppercase mb-5" style={{ color: "#666666", letterSpacing: "0.14em" }}>
+            <p className="text-xs font-medium uppercase mb-5" style={{ color: "#888888", letterSpacing: "0.14em" }}>
               What the Score Reveals
             </p>
             <div className="space-y-2">
@@ -881,12 +926,12 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
                     {/* Category header row */}
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
-                        <span style={{ color: isActive ? gs.color : "#555555", transition: "color 0.3s" }}>
+                        <span style={{ color: isActive ? gs.color : "#888888", transition: "color 0.3s" }}>
                           {meta?.icon}
                         </span>
                         <span
                           className="text-xs font-semibold uppercase"
-                          style={{ color: isActive ? "#cccccc" : "#555555", letterSpacing: "0.1em", transition: "color 0.3s" }}
+                          style={{ color: isActive ? "#cccccc" : "#888888", letterSpacing: "0.1em", transition: "color 0.3s" }}
                         >
                           {meta?.label}
                         </span>
@@ -904,7 +949,7 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
                         >
                           {report.category_grades[insight.category as keyof typeof report.category_grades]}
                         </div>
-                        <span style={{ color: "#555555", fontSize: "0.7rem", letterSpacing: "0.03em" }}>
+                        <span style={{ color: "#777777", fontSize: "0.7rem", letterSpacing: "0.03em" }}>
                           {gs.label}
                         </span>
                       </div>
@@ -913,7 +958,7 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
                     <p
                       className="text-sm leading-relaxed"
                       style={{
-                        color: isActive ? "#dddddd" : "#666666",
+                        color: isActive ? "#dddddd" : "#999999",
                         transition: "color 0.3s ease",
                       }}
                     >
@@ -927,7 +972,7 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
 
           {/* ── Revenue Opportunity ── */}
           <div className="mb-12 animate-fade-in-up animation-delay-500">
-            <p className="text-xs font-medium uppercase mb-5" style={{ color: "#666666", letterSpacing: "0.14em" }}>
+            <p className="text-xs font-medium uppercase mb-5" style={{ color: "#888888", letterSpacing: "0.14em" }}>
               Revenue Opportunity Signal
             </p>
             <div
@@ -996,18 +1041,18 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
               {report.cta_body}
             </p>
 
-            <a
-              href="mailto:hello@speedxmedia.com?subject=Revenue%20Activation%20Plan%20Request"
+            <button
+              onClick={() => setShowModal(true)}
               className="inline-flex items-center gap-2 rounded-xl font-semibold px-8 py-4 text-sm transition-all duration-200"
-              style={{ background: "#c0392b", color: "#fff", letterSpacing: "0.07em", textTransform: "uppercase" }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#a93226"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "#c0392b"; }}
+              style={{ background: "#c0392b", color: "#fff", letterSpacing: "0.07em", textTransform: "uppercase", border: "none", cursor: "pointer" }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "#a93226"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "#c0392b"; }}
             >
               Request a Strategy Call
               <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
                 <path d="M3 7h8M7.5 3.5 11 7l-3.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-            </a>
+            </button>
 
             <p className="mt-4 text-xs" style={{ color: "#2e2e2e" }}>
               No obligation &nbsp;&bull;&nbsp; Strategy-first conversation
@@ -1018,6 +1063,367 @@ function ResultsView({ report, url, onReset }: { report: GradeReport; url: strin
       </main>
 
       <Footer />
+
+      {/* Strategy Call Modal — rendered as a portal-like overlay inside the page root */}
+      {showModal && (
+        <StrategyCallModal
+          onClose={() => setShowModal(false)}
+          prefillEmail={email}
+          prefillWebsite={url}
+          leadId={leadId}
+        />
+      )}
+    </div>
+  );
+}
+
+// ─── Strategy Call Modal ──────────────────────────────────────────────────────
+
+function StrategyCallModal({
+  onClose,
+  prefillEmail,
+  prefillWebsite,
+  leadId,
+}: {
+  onClose: () => void;
+  prefillEmail: string;
+  prefillWebsite: string;
+  leadId: string | null;
+}) {
+  const [name, setName] = useState("");
+  const [contactEmail, setContactEmail] = useState(prefillEmail);
+  const [businessName, setBusinessName] = useState("");
+  const [industry, setIndustry] = useState("");
+  const [website, setWebsite] = useState(prefillWebsite);
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
+
+  // Close on Escape key
+  if (typeof window !== "undefined") {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handleKey, { once: true });
+  }
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (!name.trim() || !contactEmail.trim() || !businessName.trim() || !website.trim()) {
+      setError("Please fill in all required fields.");
+      return;
+    }
+    if (!contactEmail.includes("@") || !contactEmail.includes(".")) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
+    // Read UTM params — prefer sessionStorage (captured on landing) so attribution
+    // is preserved even if the URL no longer contains UTM params at submit time.
+    const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"] as const;
+    let utms: Record<string, string>;
+    try {
+      const stored = sessionStorage.getItem("speedx_utms");
+      utms = stored ? JSON.parse(stored) : {};
+    } catch {
+      utms = {};
+    }
+    // Fill any missing keys from the current URL as a fallback
+    const params = new URLSearchParams(window.location.search);
+    for (const k of UTM_KEYS) {
+      if (!utms[k]) utms[k] = params.get(k) ?? "";
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/strategy-call", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          contact_email: contactEmail.trim(),
+          business_name: businessName.trim(),
+          industry: industry.trim(),
+          website: website.trim(),
+          leadId,
+          ...utms,
+        }),
+      });
+      if (!res.ok) throw new Error("Request failed");
+      setSuccess(true);
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    background: "#0a0a0a",
+    border: "1px solid #222222",
+    borderRadius: 10,
+    padding: "10px 14px",
+    color: "#efefef",
+    fontSize: "0.875rem",
+    outline: "none",
+    transition: "border-color 0.2s",
+    fontFamily: "inherit",
+  };
+
+  const labelStyle: React.CSSProperties = {
+    display: "block",
+    fontSize: "0.7rem",
+    letterSpacing: "0.1em",
+    textTransform: "uppercase",
+    color: "#888888",
+    marginBottom: 6,
+    fontWeight: 500,
+  };
+
+  return (
+    // Backdrop
+    <div
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      style={{
+        position: "fixed", inset: 0, zIndex: 50,
+        background: "rgba(0,0,0,0.75)",
+        backdropFilter: "blur(6px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "16px",
+      }}
+    >
+      {/* Panel */}
+      <div
+        style={{
+          background: "#0e0e0e",
+          border: "1px solid #242424",
+          borderRadius: 20,
+          width: "100%",
+          maxWidth: 480,
+          maxHeight: "90vh",
+          overflowY: "auto",
+          padding: "32px 28px",
+          position: "relative",
+        }}
+      >
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          style={{
+            position: "absolute", top: 16, right: 16,
+            width: 30, height: 30,
+            background: "#181818",
+            border: "1px solid #2a2a2a",
+            borderRadius: 8,
+            color: "#666666",
+            cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "color 0.2s",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = "#aaaaaa"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = "#666666"; }}
+          aria-label="Close"
+        >
+          <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+            <path d="M1 1l10 10M11 1 1 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          </svg>
+        </button>
+
+        {success ? (
+          /* ── Success state ── */
+          <div className="text-center" style={{ padding: "16px 0 8px" }}>
+            <div
+              style={{
+                width: 52, height: 52, borderRadius: "50%",
+                background: "rgba(16,185,129,0.1)",
+                border: "1px solid rgba(16,185,129,0.25)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                margin: "0 auto 20px",
+              }}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path d="M4.5 12.5l5 5L19.5 7" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <h3
+              style={{
+                color: "#efefef", fontFamily: "'Unbounded', sans-serif",
+                fontSize: "1rem", fontWeight: 700, marginBottom: 10,
+                letterSpacing: "-0.01em",
+              }}
+            >
+              Request Received
+            </h3>
+            <p style={{ color: "#888888", fontSize: "0.875rem", lineHeight: 1.6, marginBottom: 28 }}>
+              The SpeedX team has your details and will be in touch within one business day to schedule your strategy call.
+            </p>
+            <button
+              onClick={onClose}
+              style={{
+                background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 10,
+                color: "#aaaaaa", fontSize: "0.8rem", padding: "9px 20px",
+                cursor: "pointer", letterSpacing: "0.06em", textTransform: "uppercase",
+                transition: "color 0.2s",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = "#efefef"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = "#aaaaaa"; }}
+            >
+              Close
+            </button>
+          </div>
+        ) : (
+          /* ── Form ── */
+          <>
+            {/* Header */}
+            <div style={{ marginBottom: 24 }}>
+              <div
+                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium mb-4"
+                style={{ background: "#131313", border: "1px solid #222222", color: "#666666", letterSpacing: "0.1em", textTransform: "uppercase" }}
+              >
+                <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#c0392b", display: "inline-block", boxShadow: "0 0 4px rgba(192,57,43,0.7)" }} />
+                Strategy Call
+              </div>
+              <h3
+                style={{
+                  color: "#efefef",
+                  fontFamily: "'Unbounded', sans-serif",
+                  fontSize: "1rem",
+                  fontWeight: 700,
+                  letterSpacing: "-0.01em",
+                  marginBottom: 8,
+                }}
+              >
+                Request a Strategy Call
+              </h3>
+              <p style={{ color: "#777777", fontSize: "0.8rem", lineHeight: 1.6 }}>
+                Tell us about your business and we&apos;ll schedule a focused session around your Revenue Activation Plan.
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {/* Name */}
+              <div>
+                <label style={labelStyle}>Name <span style={{ color: "#c0392b" }}>*</span></label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Jane Smith"
+                  style={inputStyle}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = "#3a3a3a"; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = "#222222"; }}
+                />
+              </div>
+
+              {/* Contact Email */}
+              <div>
+                <label style={labelStyle}>Contact Email <span style={{ color: "#c0392b" }}>*</span></label>
+                <input
+                  type="email"
+                  value={contactEmail}
+                  onChange={(e) => setContactEmail(e.target.value)}
+                  placeholder="jane@company.com"
+                  style={inputStyle}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = "#3a3a3a"; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = "#222222"; }}
+                />
+              </div>
+
+              {/* Business Name */}
+              <div>
+                <label style={labelStyle}>Business Name <span style={{ color: "#c0392b" }}>*</span></label>
+                <input
+                  type="text"
+                  value={businessName}
+                  onChange={(e) => setBusinessName(e.target.value)}
+                  placeholder="Acme Inc."
+                  style={inputStyle}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = "#3a3a3a"; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = "#222222"; }}
+                />
+              </div>
+
+              {/* Industry */}
+              <div>
+                <label style={labelStyle}>Industry</label>
+                <input
+                  type="text"
+                  value={industry}
+                  onChange={(e) => setIndustry(e.target.value)}
+                  placeholder="e.g. SaaS, E-commerce, Professional Services"
+                  style={inputStyle}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = "#3a3a3a"; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = "#222222"; }}
+                />
+              </div>
+
+              {/* Website */}
+              <div>
+                <label style={labelStyle}>Website <span style={{ color: "#c0392b" }}>*</span></label>
+                <input
+                  type="text"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                  placeholder="yourwebsite.com"
+                  style={inputStyle}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = "#3a3a3a"; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = "#222222"; }}
+                />
+              </div>
+
+              {/* Error */}
+              {error && (
+                <p style={{ color: "#ef4444", fontSize: "0.8rem", margin: 0 }}>{error}</p>
+              )}
+
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={submitting}
+                className="inline-flex items-center justify-center gap-2"
+                style={{
+                  background: submitting ? "#8a2820" : "#c0392b",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 12,
+                  padding: "13px 24px",
+                  fontSize: "0.8rem",
+                  fontWeight: 600,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  cursor: submitting ? "not-allowed" : "pointer",
+                  transition: "background 0.2s",
+                  marginTop: 4,
+                }}
+                onMouseEnter={(e) => { if (!submitting) e.currentTarget.style.background = "#a93226"; }}
+                onMouseLeave={(e) => { if (!submitting) e.currentTarget.style.background = "#c0392b"; }}
+              >
+                {submitting ? (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ animation: "spin 0.8s linear infinite" }}>
+                      <circle cx="12" cy="12" r="9" stroke="rgba(255,255,255,0.25)" strokeWidth="2.5" />
+                      <path d="M12 3a9 9 0 0 1 9 9" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" />
+                    </svg>
+                    Sending…
+                  </>
+                ) : (
+                  <>
+                    Request Strategy Call
+                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                      <path d="M3 7h8M7.5 3.5 11 7l-3.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </>
+                )}
+              </button>
+
+              <p style={{ color: "#3a3a3a", fontSize: "0.72rem", textAlign: "center", margin: 0 }}>
+                No obligation &nbsp;&bull;&nbsp; Strategy-first conversation
+              </p>
+            </form>
+          </>
+        )}
+      </div>
     </div>
   );
 }
