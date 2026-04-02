@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, FormEvent } from "react";
+import { useState, useEffect, useRef, FormEvent } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1098,6 +1098,8 @@ function StrategyCallModal({
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  // Hard lock — prevents a second request even if React state hasn't flushed yet
+  const submitInFlight = useRef(false);
 
   // Close on Escape key
   if (typeof window !== "undefined") {
@@ -1109,6 +1111,14 @@ function StrategyCallModal({
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
+
+    // Hard guard — ref-based lock prevents a second request even if React
+    // state hasn't flushed yet (covers rapid double-click edge cases)
+    if (submitInFlight.current) {
+      console.warn("[StrategyCallModal] Submit ignored — request already in flight");
+      return;
+    }
+
     if (!name.trim() || !contactEmail.trim() || !businessName.trim() || !website.trim()) {
       setError("Please fill in all required fields.");
       return;
@@ -1134,7 +1144,10 @@ function StrategyCallModal({
       if (!utms[k]) utms[k] = params.get(k) ?? "";
     }
 
+    submitInFlight.current = true;
     setSubmitting(true);
+    console.log("[StrategyCallModal] Firing single POST to /api/strategy-call");
+
     try {
       const res = await fetch("/api/strategy-call", {
         method: "POST",
@@ -1149,12 +1162,16 @@ function StrategyCallModal({
           ...utms,
         }),
       });
-      if (!res.ok) throw new Error("Request failed");
+      const data = await res.json();
+      console.log("[StrategyCallModal] Response:", res.status, JSON.stringify(data));
+      if (!res.ok) throw new Error(data.error ?? "Request failed");
       setSuccess(true);
-    } catch {
+    } catch (err) {
+      console.error("[StrategyCallModal] Submission error:", err);
       setError("Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
+      submitInFlight.current = false;
     }
   }
 

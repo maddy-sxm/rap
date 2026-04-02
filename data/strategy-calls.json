@@ -20,5 +20,16 @@
     "callId": "366707e5-fd75-4896-ae45-803cebcf0618",
     "timestamp": "2026-04-02T17:41:02.204Z",
     "source": "strategy_call"
+  },
+  {
+    "leadId": null,
+    "name": "Jane Smith",
+    "contact_email": "jane@company.com",
+    "business_name": "Acme Inc",
+    "industry": "",
+    "website": "acme.com",
+    "callId": "ce5cf533-3214-4c2e-a0b4-99a2ddd9a689",
+    "timestamp": "2026-04-02T17:50:04.404Z",
+    "source": "strategy_call"
   }
 ]
