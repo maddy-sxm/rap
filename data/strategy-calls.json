@@ -9,5 +9,16 @@
     "callId": "a89145f2-ae93-42fa-8c37-ee359a7d232d",
     "timestamp": "2026-04-02T17:22:44.118Z",
     "source": "strategy_call"
+  },
+  {
+    "leadId": null,
+    "name": "Test User",
+    "contact_email": "test@test.com",
+    "business_name": "Test Co",
+    "industry": "",
+    "website": "test.com",
+    "callId": "366707e5-fd75-4896-ae45-803cebcf0618",
+    "timestamp": "2026-04-02T17:41:02.204Z",
+    "source": "strategy_call"
   }
 ]
