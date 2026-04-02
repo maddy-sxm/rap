@@ -1,10 +1,14 @@
 /**
  * POST /api/strategy-call
  *
- * Saves the strategy call locally and fires ONE webhook to Google Sheets
- * containing all fields: name, email, business, website + utm_*.
+ * One submission → one webhook call → one row in Google Sheets.
  *
- * One submission → one webhook call → one row.
+ * Duplicate-prevention layers:
+ *   1. Client sends a unique `submissionId` per form submit.
+ *   2. Server tracks recent submissionIds in an in-memory Set; any request
+ *      with a seen ID is acknowledged immediately without re-firing the webhook.
+ *   3. Webhook uses redirect:"manual" so Node never follows GAS's 302 redirect
+ *      and cannot accidentally re-trigger doPost on the redirect target.
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -12,29 +16,55 @@ import { saveStrategyCall } from "@/lib/leads";
 
 export const runtime = "nodejs";
 
-// ── Single webhook endpoint ───────────────────────────────────────────────────
-// Contains all fields: name / email / business / website / utm_*
+// ── Idempotency store ─────────────────────────────────────────────────────────
+// Keeps submissionIds for 60 s — long enough to catch any retry/double-submit,
+// short enough not to grow unbounded on a long-running server.
+const recentSubmissions = new Set<string>();
+
+function isDuplicate(id: string): boolean {
+  if (recentSubmissions.has(id)) return true;
+  recentSubmissions.add(id);
+  setTimeout(() => recentSubmissions.delete(id), 60_000);
+  return false;
+}
+
+// ── Webhook ───────────────────────────────────────────────────────────────────
+
 const SHEET_WEBHOOK =
   "https://script.google.com/macros/s/AKfycbxyhGMnwjqL3JEG8mvjzrfgHN5GXz4WS8Nrc32byAqtzBEwrZWW1_pS2OsZvbzzXL3M/exec";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+async function fireWebhook(
+  submissionId: string,
+  payload: Record<string, string>
+): Promise<void> {
+  console.log(`[strategy-call][${submissionId}] Firing webhook`);
+  console.log(`[strategy-call][${submissionId}] Payload: ${JSON.stringify(payload)}`);
 
-async function fireWebhook(payload: Record<string, string>): Promise<void> {
-  console.log("[strategy-call] Firing webhook — payload:", JSON.stringify(payload));
   try {
+    // redirect:"manual" — do NOT follow GAS's 302. The initial POST is all GAS
+    // needs to run doPost. Following the redirect can re-trigger execution.
     const res = await fetch(SHEET_WEBHOOK, {
       method: "POST",
-      redirect: "follow",
+      redirect: "manual",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    const text = await res.text();
-    console.log(`[strategy-call] Webhook response — status: ${res.status}, body: ${text}`);
-    if (!res.ok) {
-      console.error(`[strategy-call] Webhook returned non-OK ${res.status}: ${text}`);
+
+    // With redirect:"manual" a GAS 302 comes back as an opaque redirect (status 0
+    // in some runtimes, or the actual 3xx). Either way the request was received.
+    console.log(
+      `[strategy-call][${submissionId}] Webhook response status: ${res.status} (0 or 3xx = GAS redirect = success)`
+    );
+
+    // Try to read the body if available (won't work on opaque redirects)
+    try {
+      const text = await res.text();
+      if (text) console.log(`[strategy-call][${submissionId}] Webhook response body: ${text}`);
+    } catch {
+      // opaque redirect — no body to read, that is expected
     }
   } catch (err) {
-    console.error("[strategy-call] Webhook threw:", err);
+    console.error(`[strategy-call][${submissionId}] Webhook threw:`, err);
   }
 }
 
@@ -51,6 +81,7 @@ const CORS_HEADERS = {
 export async function POST(req: NextRequest): Promise<NextResponse> {
   // ── 1. Parse ───────────────────────────────────────────────────────────────
   let body: {
+    submissionId?: string;
     name?: string;
     contact_email?: string;
     business_name?: string;
@@ -73,16 +104,29 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     );
   }
 
-  console.log("[strategy-call] Request received:", JSON.stringify(body));
+  const submissionId = body.submissionId ?? `no-id-${Date.now()}`;
+  console.log(`[strategy-call][${submissionId}] Request received`);
+  console.log(`[strategy-call][${submissionId}] Body: ${JSON.stringify(body)}`);
 
-  // ── 2. Validate ────────────────────────────────────────────────────────────
+  // ── 2. Idempotency check ───────────────────────────────────────────────────
+  if (isDuplicate(submissionId)) {
+    console.warn(
+      `[strategy-call][${submissionId}] DUPLICATE REQUEST — returning 200 without re-processing`
+    );
+    return NextResponse.json(
+      { success: true, duplicate: true },
+      { status: 200, headers: CORS_HEADERS }
+    );
+  }
+
+  // ── 3. Validate ────────────────────────────────────────────────────────────
   if (
     !body.name?.trim() ||
     !body.contact_email?.trim() ||
     !body.business_name?.trim() ||
     !body.website?.trim()
   ) {
-    console.warn("[strategy-call] Validation failed — missing required fields");
+    console.warn(`[strategy-call][${submissionId}] Validation failed`);
     return NextResponse.json(
       { error: "name, contact_email, business_name, and website are required" },
       { status: 400, headers: CORS_HEADERS }
@@ -96,23 +140,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const industry = body.industry?.trim() ?? "";
   const leadId   = body.leadId ?? null;
 
-  // ── 3. Local save (isolated — never blocks the response) ──────────────────
+  // ── 4. Local save (isolated) ───────────────────────────────────────────────
   try {
-    await saveStrategyCall({
-      leadId,
-      name,
-      contact_email: email,
-      business_name: business,
-      industry,
-      website,
-    });
-    console.log("[strategy-call] Local save succeeded");
+    await saveStrategyCall({ leadId, name, contact_email: email, business_name: business, industry, website });
+    console.log(`[strategy-call][${submissionId}] Local save succeeded`);
   } catch (err) {
-    console.error("[strategy-call] Local save failed (non-fatal):", err);
+    console.error(`[strategy-call][${submissionId}] Local save failed (non-fatal):`, err);
   }
 
-  // ── 4. Single webhook — all 9 fields in one row ───────────────────────────
-  await fireWebhook({
+  // ── 5. Single webhook — all 9 fields ──────────────────────────────────────
+  await fireWebhook(submissionId, {
     name,
     email,
     business,
@@ -124,8 +161,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     utm_content:  body.utm_content  ?? "",
   });
 
-  // ── 5. Return success ──────────────────────────────────────────────────────
-  console.log("[strategy-call] Done — returning 200");
+  console.log(`[strategy-call][${submissionId}] Done — returning 200`);
   return NextResponse.json(
     { success: true },
     { status: 200, headers: CORS_HEADERS }

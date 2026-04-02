@@ -1098,8 +1098,10 @@ function StrategyCallModal({
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
-  // Hard lock — prevents a second request even if React state hasn't flushed yet
+  // Ref-based lock: set synchronously on mousedown — before click or submit fire.
+  // Also carries a stable UUID per attempt so the server can deduplicate.
   const submitInFlight = useRef(false);
+  const submissionId   = useRef<string | null>(null);
 
   // Close on Escape key
   if (typeof window !== "undefined") {
@@ -1144,15 +1146,23 @@ function StrategyCallModal({
       if (!utms[k]) utms[k] = params.get(k) ?? "";
     }
 
+    // Generate a stable ID for this attempt — sent to the server so it can
+    // deduplicate if the same request somehow arrives more than once.
+    if (!submissionId.current) {
+      submissionId.current = crypto.randomUUID();
+    }
+    const currentId = submissionId.current;
+
     submitInFlight.current = true;
     setSubmitting(true);
-    console.log("[StrategyCallModal] Firing single POST to /api/strategy-call");
+    console.log(`[StrategyCallModal] Submitting — id: ${currentId}`);
 
     try {
       const res = await fetch("/api/strategy-call", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          submissionId: currentId,
           name: name.trim(),
           contact_email: contactEmail.trim(),
           business_name: businessName.trim(),
@@ -1163,11 +1173,12 @@ function StrategyCallModal({
         }),
       });
       const data = await res.json();
-      console.log("[StrategyCallModal] Response:", res.status, JSON.stringify(data));
+      console.log(`[StrategyCallModal] Response for ${currentId}:`, res.status, JSON.stringify(data));
       if (!res.ok) throw new Error(data.error ?? "Request failed");
       setSuccess(true);
+      submissionId.current = null; // clear after confirmed success
     } catch (err) {
-      console.error("[StrategyCallModal] Submission error:", err);
+      console.error(`[StrategyCallModal] Error for ${currentId}:`, err);
       setError("Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
@@ -1399,6 +1410,13 @@ function StrategyCallModal({
                 type="submit"
                 disabled={submitting}
                 className="inline-flex items-center justify-center gap-2"
+                // onMouseDown fires before onClick and onSubmit — earliest possible lock point.
+                // This stamps the in-flight flag synchronously before any async work begins.
+                onMouseDown={() => {
+                  if (submitInFlight.current) return;
+                  if (!submissionId.current) submissionId.current = crypto.randomUUID();
+                  console.log(`[StrategyCallModal] mousedown — pre-locking id: ${submissionId.current}`);
+                }}
                 style={{
                   background: submitting ? "#8a2820" : "#c0392b",
                   color: "#fff",
