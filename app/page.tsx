@@ -100,7 +100,13 @@ function Logo({ size = "md" }: { size?: "sm" | "md" }) {
     ? { box: 22, icon: 12, textClass: "text-base" }
     : { box: 28, icon: 15, textClass: "text-lg" };
   return (
-    <div className="flex items-center gap-2.5">
+    <a
+      href="https://www.speedxmedia.com"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-2.5"
+      style={{ textDecoration: "none" }}
+    >
       <div
         style={{
           width: s.box, height: s.box,
@@ -122,7 +128,7 @@ function Logo({ size = "md" }: { size?: "sm" | "md" }) {
       >
         SPEEDXMEDIA
       </span>
-    </div>
+    </a>
   );
 }
 
@@ -323,13 +329,13 @@ function LandingView({
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <Logo />
           <a
-            href="mailto:hello@speedxmedia.com"
+            href="mailto:marketing@speedxmedia.com"
             className="text-sm transition-colors"
             style={{ color: "#3a3a3a" }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#888888"; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "#3a3a3a"; }}
           >
-            hello@speedxmedia.com
+            marketing@speedxmedia.com
           </a>
         </div>
       </header>
@@ -1498,13 +1504,13 @@ function Footer() {
           &copy; {new Date().getFullYear()} SpeedX Media. Results are diagnostic estimates based on publicly accessible page data.
         </p>
         <a
-          href="mailto:hello@speedxmedia.com"
+          href="mailto:marketing@speedxmedia.com"
           className="text-xs transition-colors"
           style={{ color: "#2e2e2e" }}
           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#888888"; }}
           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "#2e2e2e"; }}
         >
-          hello@speedxmedia.com
+          marketing@speedxmedia.com
         </a>
       </div>
     </footer>
