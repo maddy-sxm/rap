@@ -254,6 +254,7 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          submissionId: crypto.randomUUID(),
           email: trimmedEmail,
           domain: extractDomain(url),
           submitted_url: url,

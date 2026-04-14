@@ -31,7 +31,7 @@ function isDuplicate(id: string): boolean {
 // ── Webhook ───────────────────────────────────────────────────────────────────
 
 const SHEET_WEBHOOK =
-  "https://script.google.com/macros/s/AKfycbxn9XhF01iM_MFZN33_FHW5UEh26ayz2scLwf6Zm14y_InEfUZa57uDv354Vn8TPuJMqA/exec";
+  "https://script.google.com/macros/s/AKfycbzAM0j6l0PF70JdG6pAgGMGeFsEv98FPTL2mnGyeVS1CTakVKycXkaNq8yjUxl-ElxV/exec";
 
 async function fireWebhook(
   submissionId: string,
