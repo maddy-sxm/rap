@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, FormEvent } from "react";
+import { useRouter } from "next/navigation";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1119,13 +1120,13 @@ function StrategyCallModal({
   prefillWebsite: string;
   leadId: string | null;
 }) {
+  const router = useRouter();
   const [name, setName] = useState("");
   const [contactEmail, setContactEmail] = useState(prefillEmail);
   const [businessName, setBusinessName] = useState("");
   const [industry, setIndustry] = useState("");
   const [website, setWebsite] = useState(prefillWebsite);
   const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
   // Ref-based lock: set synchronously on mousedown — before click or submit fire.
   // Also carries a stable UUID per attempt so the server can deduplicate.
@@ -1206,8 +1207,9 @@ function StrategyCallModal({
       const data = await res.json();
       console.log(`[StrategyCallModal] Response for ${currentId}:`, res.status, JSON.stringify(data));
       if (!res.ok) throw new Error(data.error ?? "Request failed");
-      setSuccess(true);
       submissionId.current = null; // clear after confirmed success
+      router.push("/thank-you");
+      return;
     } catch (err) {
       console.error(`[StrategyCallModal] Error for ${currentId}:`, err);
       setError("Something went wrong. Please try again.");
@@ -1289,51 +1291,8 @@ function StrategyCallModal({
           </svg>
         </button>
 
-        {success ? (
-          /* ── Success state ── */
-          <div className="text-center" style={{ padding: "16px 0 8px" }}>
-            <div
-              style={{
-                width: 52, height: 52, borderRadius: "50%",
-                background: "rgba(16,185,129,0.1)",
-                border: "1px solid rgba(16,185,129,0.25)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                margin: "0 auto 20px",
-              }}
-            >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <path d="M4.5 12.5l5 5L19.5 7" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <h3
-              style={{
-                color: "#efefef", fontFamily: "'Unbounded', sans-serif",
-                fontSize: "1rem", fontWeight: 700, marginBottom: 10,
-                letterSpacing: "-0.01em",
-              }}
-            >
-              Request Received
-            </h3>
-            <p style={{ color: "#888888", fontSize: "0.875rem", lineHeight: 1.6, marginBottom: 28 }}>
-              The SpeedX team has your details and will be in touch within one business day to schedule your strategy call.
-            </p>
-            <button
-              onClick={onClose}
-              style={{
-                background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 10,
-                color: "#aaaaaa", fontSize: "0.8rem", padding: "9px 20px",
-                cursor: "pointer", letterSpacing: "0.06em", textTransform: "uppercase",
-                transition: "color 0.2s",
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = "#efefef"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = "#aaaaaa"; }}
-            >
-              Close
-            </button>
-          </div>
-        ) : (
-          /* ── Form ── */
-          <>
+        {/* ── Form ── */}
+        <>
             {/* Header */}
             <div style={{ marginBottom: 24 }}>
               <div
@@ -1488,7 +1447,6 @@ function StrategyCallModal({
               </p>
             </form>
           </>
-        )}
       </div>
     </div>
   );
