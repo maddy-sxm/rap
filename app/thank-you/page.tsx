@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
 
 declare global {
   interface Window {
@@ -190,8 +189,10 @@ export default function ThankYouPage() {
           ))}
         </div>
 
-        <Link
-          href="/"
+        <a
+          href="https://speedxmedia.com/"
+          target="_blank"
+          rel="noopener noreferrer"
           style={{
             display: "inline-block",
             background: "#1a1a1a",
@@ -207,7 +208,7 @@ export default function ThankYouPage() {
           }}
         >
           Back to SpeedX
-        </Link>
+        </a>
       </div>
     </main>
   );
