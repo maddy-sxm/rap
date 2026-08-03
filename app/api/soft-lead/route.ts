@@ -41,6 +41,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     utm_campaign?: string;
     utm_term?: string;
     utm_content?: string;
+    gclid?: string;
+    gbraid?: string;
+    wbraid?: string;
+    fbclid?: string;
   };
 
   try {
@@ -79,6 +83,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     utm_campaign: body.utm_campaign ?? "",
     utm_term:     body.utm_term     ?? "",
     utm_content:  body.utm_content  ?? "",
+    gclid:        body.gclid        ?? "",
+    gbraid:       body.gbraid       ?? "",
+    wbraid:       body.wbraid       ?? "",
+    fbclid:       body.fbclid       ?? "",
   };
 
   console.log(`[soft-lead][${submissionId}] Firing webhook — payload: ${JSON.stringify(payload)}`);

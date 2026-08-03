@@ -72,6 +72,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     submissionId?: string;
     name?: string;
     contact_email?: string;
+    phone?: string;
     business_name?: string;
     industry?: string;
     website?: string;
@@ -81,6 +82,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     utm_campaign?: string;
     utm_term?: string;
     utm_content?: string;
+    gclid?: string;
+    gbraid?: string;
+    wbraid?: string;
+    fbclid?: string;
   };
 
   try {
@@ -123,6 +128,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   const name     = body.name.trim();
   const email    = body.contact_email.trim();
+  // Optional server-side (required client-side) so clients still on the old
+  // bundle don't get a hard 400 mid-session after a deploy.
+  const phone    = body.phone?.trim() ?? "";
   const business = body.business_name.trim();
   const website  = body.website.trim();
   const industry = body.industry?.trim() ?? "";
@@ -136,18 +144,25 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     console.error(`[strategy-call][${submissionId}] Local save failed (non-fatal):`, err);
   }
 
-  // ── 5. Single webhook — all 9 fields ──────────────────────────────────────
+  // ── 5. Single webhook ──────────────────────────────────────────────────────
   await fireWebhook(submissionId, {
     type:         "strategy_call",
     name,
     email,
-    business,
+    phone,
+    business_name: business,
+    industry,
     website,
+    leadId:       leadId ?? "",
     utm_source:   body.utm_source   ?? "",
     utm_medium:   body.utm_medium   ?? "",
     utm_campaign: body.utm_campaign ?? "",
     utm_term:     body.utm_term     ?? "",
     utm_content:  body.utm_content  ?? "",
+    gclid:        body.gclid        ?? "",
+    gbraid:       body.gbraid       ?? "",
+    wbraid:       body.wbraid       ?? "",
+    fbclid:       body.fbclid       ?? "",
   });
 
   console.log(`[strategy-call][${submissionId}] Done — returning 200`);

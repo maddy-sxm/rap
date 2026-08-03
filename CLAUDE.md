@@ -88,13 +88,24 @@ via an in-memory `Set` with a 60s TTL. The client sends `submissionId:
 crypto.randomUUID()` and the server ignores repeats. This matters if you
 add retries, React Strict Mode doubles, or rapid double-clicks.
 
-## UTM attribution
+## UTM + click-ID attribution
 
-UTM params are captured on the **first** landing page load into
-`sessionStorage["speedx_utms"]` so attribution survives navigation inside
-the session. Every lead API call pulls from sessionStorage and falls back
-to the current URL's query string. Don't change this without thinking
-about attribution — losing first-touch UTMs costs the business money.
+Attribution params — the five `utm_*` keys **plus ad click IDs** (`gclid`,
+`gbraid`, `wbraid` for Google Ads; `fbclid` for Meta) — are captured on the
+**first** landing page load into `sessionStorage["speedx_utms"]` so
+attribution survives navigation inside the session. The canonical key list
+is `ATTRIBUTION_KEYS` in `app/page.tsx`; the shared `getAttribution()`
+helper (sessionStorage first, current-URL fallback) is spread into all
+three lead submissions (`soft_lead`, `hard_lead`, `strategy_call`), and all
+three API routes forward the fields to the Sheets webhook. Don't change
+this without thinking about attribution — losing first-touch UTMs or
+gclids costs the business money.
+
+The Apps Script lives at `apps-script/Code.gs` (reference copy — the live
+one is deployed at script.google.com). It appends rows **header-driven**:
+payload keys are matched to row-1 headers case-insensitively, and unknown
+keys auto-create a new column. Adding a field to a payload therefore needs
+no script change once that version of the script is deployed.
 
 ## Tracking / ad pixels (in `app/layout.tsx`)
 

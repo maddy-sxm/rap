@@ -133,6 +133,34 @@ function Logo({ size = "md" }: { size?: "sm" | "md" }) {
   );
 }
 
+// ─── Attribution ──────────────────────────────────────────────────────────────
+
+// Captured from the landing URL and attached to every lead submission.
+// UTMs describe the campaign; click IDs (gclid/gbraid/wbraid for Google Ads,
+// fbclid for Meta) let the ad platforms tie a lead back to the exact ad click.
+const ATTRIBUTION_KEYS = [
+  "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content",
+  "gclid", "gbraid", "wbraid", "fbclid",
+] as const;
+
+const ATTRIBUTION_SESSION_KEY = "speedx_utms";
+
+// Prefer sessionStorage (captured on landing) so attribution survives even if
+// the URL no longer contains the params at submit time; fall back to the
+// current URL for any key that's missing.
+function getAttribution(): Record<string, string> {
+  let attribution: Record<string, string> = {};
+  try {
+    const stored = sessionStorage.getItem(ATTRIBUTION_SESSION_KEY);
+    if (stored) attribution = JSON.parse(stored);
+  } catch { /* ignore */ }
+  const params = new URLSearchParams(window.location.search);
+  for (const k of ATTRIBUTION_KEYS) {
+    if (!attribution[k]) attribution[k] = params.get(k) ?? "";
+  }
+  return attribution;
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function Home() {
@@ -146,19 +174,18 @@ export default function Home() {
   const [scanStep, setScanStep] = useState(0);
   const [submittingEmail, setSubmittingEmail] = useState(false);
 
-  // Capture UTM params from the landing URL into sessionStorage on first load.
-  // We only write if UTMs are actually present in the URL so we never overwrite
-  // a previously captured set with empty values (preserves first-touch attribution).
+  // Capture UTM params and ad click IDs (gclid etc.) from the landing URL into
+  // sessionStorage on first load. We only write if params are actually present
+  // in the URL so we never overwrite a previously captured set with empty
+  // values (preserves first-touch attribution).
   useEffect(() => {
-    const SESSION_KEY = "speedx_utms";
-    if (sessionStorage.getItem(SESSION_KEY)) return; // already captured this session
+    if (sessionStorage.getItem(ATTRIBUTION_SESSION_KEY)) return; // already captured this session
     const params = new URLSearchParams(window.location.search);
-    const utmKeys = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"] as const;
-    const hasUtms = utmKeys.some((k) => params.get(k));
-    if (!hasUtms) return; // no UTMs on this URL — nothing to store
+    const hasAttribution = ATTRIBUTION_KEYS.some((k) => params.get(k));
+    if (!hasAttribution) return; // nothing on this URL — nothing to store
     const captured: Record<string, string> = {};
-    for (const k of utmKeys) captured[k] = params.get(k) ?? "";
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(captured));
+    for (const k of ATTRIBUTION_KEYS) captured[k] = params.get(k) ?? "";
+    sessionStorage.setItem(ATTRIBUTION_SESSION_KEY, JSON.stringify(captured));
   }, []);
 
   async function handleUrlSubmit(e: FormEvent) {
@@ -171,26 +198,16 @@ export default function Home() {
     setScanStep(0);
 
     // Fire soft lead — once, non-blocking, does not affect the grading flow.
-    // Reads UTMs from sessionStorage (captured on landing page load).
-    (() => {
-      let utms: Record<string, string> = {};
-      try {
-        const stored = sessionStorage.getItem("speedx_utms");
-        if (stored) utms = JSON.parse(stored);
-      } catch { /* ignore */ }
-      const params = new URLSearchParams(window.location.search);
-      const utmKeys = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"] as const;
-      for (const k of utmKeys) { if (!utms[k]) utms[k] = params.get(k) ?? ""; }
-      fetch("/api/soft-lead", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          submissionId: crypto.randomUUID(),
-          website: trimmed,
-          ...utms,
-        }),
-      }).catch(() => {});
-    })();
+    // Reads UTMs + click IDs from sessionStorage (captured on landing page load).
+    fetch("/api/soft-lead", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        submissionId: crypto.randomUUID(),
+        website: trimmed,
+        ...getAttribution(),
+      }),
+    }).catch(() => {});
 
     // Start API fetch immediately — runs in parallel with the animation
     const apiFetch = fetch("/api/grade", {
@@ -262,6 +279,7 @@ export default function Home() {
           overall_grade: report?.overall_grade ?? "",
           category_grades: report?.category_grades ?? {},
           revenue_opportunity: report?.revenue_opportunity ?? "",
+          ...getAttribution(),
         }),
       });
       if (res.ok) {
@@ -1123,6 +1141,7 @@ function StrategyCallModal({
   const router = useRouter();
   const [name, setName] = useState("");
   const [contactEmail, setContactEmail] = useState(prefillEmail);
+  const [phone, setPhone] = useState("");
   const [businessName, setBusinessName] = useState("");
   const [industry, setIndustry] = useState("");
   const [website, setWebsite] = useState(prefillWebsite);
@@ -1151,7 +1170,7 @@ function StrategyCallModal({
       return;
     }
 
-    if (!name.trim() || !contactEmail.trim() || !businessName.trim() || !website.trim()) {
+    if (!name.trim() || !contactEmail.trim() || !phone.trim() || !businessName.trim() || !website.trim()) {
       setError("Please fill in all required fields.");
       return;
     }
@@ -1159,22 +1178,13 @@ function StrategyCallModal({
       setError("Please enter a valid email address.");
       return;
     }
+    if (phone.replace(/\D/g, "").length < 7) {
+      setError("Please enter a valid phone number.");
+      return;
+    }
 
-    // Read UTM params — prefer sessionStorage (captured on landing) so attribution
-    // is preserved even if the URL no longer contains UTM params at submit time.
-    const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"] as const;
-    let utms: Record<string, string>;
-    try {
-      const stored = sessionStorage.getItem("speedx_utms");
-      utms = stored ? JSON.parse(stored) : {};
-    } catch {
-      utms = {};
-    }
-    // Fill any missing keys from the current URL as a fallback
-    const params = new URLSearchParams(window.location.search);
-    for (const k of UTM_KEYS) {
-      if (!utms[k]) utms[k] = params.get(k) ?? "";
-    }
+    // UTMs + ad click IDs — sessionStorage first (captured on landing), URL fallback.
+    const utms = getAttribution();
 
     // Generate a stable ID for this attempt — sent to the server so it can
     // deduplicate if the same request somehow arrives more than once.
@@ -1197,6 +1207,7 @@ function StrategyCallModal({
           submissionId: currentId,
           name: name.trim(),
           contact_email: contactEmail.trim(),
+          phone: phone.trim(),
           business_name: businessName.trim(),
           industry: industry.trim(),
           website: website.trim(),
@@ -1342,6 +1353,21 @@ function StrategyCallModal({
                   value={contactEmail}
                   onChange={(e) => setContactEmail(e.target.value)}
                   placeholder="jane@company.com"
+                  style={inputStyle}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = "#3a3a3a"; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = "#222222"; }}
+                />
+              </div>
+
+              {/* Phone Number */}
+              <div>
+                <label style={labelStyle}>Phone Number <span style={{ color: "#c0392b" }}>*</span></label>
+                <input
+                  type="tel"
+                  autoComplete="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+1 (305) 555-0123"
                   style={inputStyle}
                   onFocus={(e) => { e.currentTarget.style.borderColor = "#3a3a3a"; }}
                   onBlur={(e) => { e.currentTarget.style.borderColor = "#222222"; }}

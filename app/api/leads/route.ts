@@ -40,6 +40,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     overall_grade?: string;
     category_grades?: Record<string, string>;
     revenue_opportunity?: string;
+    utm_source?: string;
+    utm_medium?: string;
+    utm_campaign?: string;
+    utm_term?: string;
+    utm_content?: string;
+    gclid?: string;
+    gbraid?: string;
+    wbraid?: string;
+    fbclid?: string;
   };
 
   try {
@@ -97,6 +106,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     submitted_url: body.submitted_url ?? '',
     overall_grade: body.overall_grade ?? '',
     revenue_opportunity: body.revenue_opportunity ?? '',
+    utm_source: body.utm_source ?? '',
+    utm_medium: body.utm_medium ?? '',
+    utm_campaign: body.utm_campaign ?? '',
+    utm_term: body.utm_term ?? '',
+    utm_content: body.utm_content ?? '',
+    gclid: body.gclid ?? '',
+    gbraid: body.gbraid ?? '',
+    wbraid: body.wbraid ?? '',
+    fbclid: body.fbclid ?? '',
   };
 
   console.log(
