@@ -107,3 +107,90 @@ function jsonResponse(obj) {
     ContentService.MimeType.JSON
   );
 }
+
+// ── One-time repair: run manually from the editor (select repairSheets → Run) ─
+//
+// Recovers from a wiped header row (row 1). When headers are lost, doPost
+// can't match any column, so it auto-creates a duplicate set of columns on the
+// right and appends leads there. This function restores the canonical headers,
+// migrates every value from the duplicate block back into its proper column,
+// deletes the duplicate columns, then freezes and protects row 1 (warning on
+// edit) so a sort or stray edit can't silently break routing again.
+// Safe to run more than once.
+
+var REPAIR_HEADERS = {
+  "Strategy Calls": ["Name", "Email", "Business Name", "Website", "Date Submitted",
+    "UTM Source", "UTM Medium", "UTM Campaign", "UTM Term", "UTM Content",
+    "timestamp", "phone", "business", "industry", "leadId",
+    "gclid", "gbraid", "wbraid", "fbclid"],
+  "Email Leads": ["Email", "Domain", "Submitted URL", "Overall Grade", "Revenue Opportunity",
+    "Timestamp", "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content",
+    "gclid", "gbraid", "wbraid", "fbclid"],
+  "Soft Leads": ["Tested Site", "Date Submitted", "utm_source", "utm_medium",
+    "utm_campaign", "utm_term", "utm_content", "timestamp", "website",
+    "gclid", "gbraid", "wbraid", "fbclid"],
+};
+
+function repairSheets() {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000); // pause incoming webhook writes while we operate
+  try {
+    var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    var report = [];
+    for (var tabName in REPAIR_HEADERS) {
+      var sheet = ss.getSheetByName(tabName);
+      if (!sheet) { report.push(tabName + ": tab not found"); continue; }
+
+      var canonical = REPAIR_HEADERS[tabName];
+      var n = canonical.length;
+      var lastCol = sheet.getLastColumn();
+      var lastRow = sheet.getLastRow();
+
+      // 1. Restore the canonical header row
+      sheet.getRange(1, 1, 1, n).setValues([canonical]);
+
+      // 2. Migrate data out of any duplicate columns to the right
+      var migrated = 0;
+      if (lastCol > n) {
+        var extraHeaders = sheet.getRange(1, n + 1, 1, lastCol - n).getValues()[0];
+        var targetCol = {};
+        for (var i = 0; i < n; i++) {
+          var key = canonicalKey(canonical[i]);
+          if (!(key in targetCol)) targetCol[key] = i + 1; // first match wins
+        }
+        if (lastRow > 1) {
+          var extra = sheet.getRange(2, n + 1, lastRow - 1, lastCol - n).getValues();
+          for (var r = 0; r < extra.length; r++) {
+            var rowHasData = false;
+            for (var c = 0; c < extra[r].length; c++) {
+              var v = extra[r][c];
+              if (v === "" || v === null) continue;
+              rowHasData = true;
+              var t = targetCol[canonicalKey(extraHeaders[c])];
+              if (t) {
+                var cell = sheet.getRange(r + 2, t);
+                if (cell.getValue() === "") cell.setValue(sanitizeValue(v));
+              }
+            }
+            if (rowHasData) migrated++;
+          }
+          sheet.getRange(2, n + 1, lastRow - 1, lastCol - n).clearContent();
+        }
+        // 3. Remove the now-empty duplicate columns
+        sheet.deleteColumns(n + 1, lastCol - n);
+      }
+
+      // 4. Freeze + protect the header row against future accidents
+      sheet.setFrozenRows(1);
+      var protection = sheet.getRange("1:1").protect();
+      protection.setDescription("Webhook header row — edits break lead routing");
+      protection.setWarningOnly(true);
+
+      report.push(tabName + ": " + migrated + " hidden rows migrated back");
+    }
+    Logger.log(report.join("\n"));
+    return report.join("\n");
+  } finally {
+    lock.releaseLock();
+  }
+}
