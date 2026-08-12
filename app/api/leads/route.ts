@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { saveLead } from '@/lib/leads';
+import { notifyHardLead } from '@/lib/notify';
 
 export const runtime = 'nodejs';
 
@@ -134,6 +135,29 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     );
   } catch (err) {
     console.error(`[leads][${submissionId}] Webhook threw:`, err);
+  }
+
+  // Internal email notification (non-fatal)
+  try {
+    await notifyHardLead({
+      email: body.email,
+      domain: body.domain,
+      submitted_url: body.submitted_url ?? '',
+      overall_grade: body.overall_grade ?? '',
+      revenue_opportunity: body.revenue_opportunity ?? '',
+      category_grades: body.category_grades ?? {},
+      utm_source: body.utm_source ?? '',
+      utm_medium: body.utm_medium ?? '',
+      utm_campaign: body.utm_campaign ?? '',
+      utm_term: body.utm_term ?? '',
+      utm_content: body.utm_content ?? '',
+      gclid: body.gclid ?? '',
+      gbraid: body.gbraid ?? '',
+      wbraid: body.wbraid ?? '',
+      fbclid: body.fbclid ?? '',
+    });
+  } catch (err) {
+    console.error(`[leads][${submissionId}] Email notification failed (non-fatal):`, err);
   }
 
   return NextResponse.json(

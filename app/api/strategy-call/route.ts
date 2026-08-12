@@ -13,6 +13,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { saveStrategyCall } from "@/lib/leads";
+import { notifyStrategyCall } from "@/lib/notify";
 
 export const runtime = "nodejs";
 
@@ -164,6 +165,29 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     wbraid:       body.wbraid       ?? "",
     fbclid:       body.fbclid       ?? "",
   });
+
+  // ── 6. Internal email notification (non-fatal) ─────────────────────────────
+  try {
+    await notifyStrategyCall({
+      name,
+      email,
+      phone,
+      business,
+      industry,
+      website,
+      utm_source:   body.utm_source   ?? "",
+      utm_medium:   body.utm_medium   ?? "",
+      utm_campaign: body.utm_campaign ?? "",
+      utm_term:     body.utm_term     ?? "",
+      utm_content:  body.utm_content  ?? "",
+      gclid:        body.gclid        ?? "",
+      gbraid:       body.gbraid       ?? "",
+      wbraid:       body.wbraid       ?? "",
+      fbclid:       body.fbclid       ?? "",
+    });
+  } catch (err) {
+    console.error(`[strategy-call][${submissionId}] Email notification failed (non-fatal):`, err);
+  }
 
   console.log(`[strategy-call][${submissionId}] Done — returning 200`);
   return NextResponse.json(
