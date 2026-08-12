@@ -11,7 +11,11 @@
 const MAILGUN_DOMAIN = 'mg.speedxmedia.com';
 const MAILGUN_API = `https://api.mailgun.net/v3/${MAILGUN_DOMAIN}/messages`;
 const FROM = 'SpeedX RAP <rap@mg.speedxmedia.com>';
-const RECIPIENTS = ['spencer@speedxmedia.com', 'marketing@speedxmedia.com'];
+// Comma-separated override via NOTIFY_RECIPIENTS env var; defaults to the team.
+const RECIPIENTS = (process.env.NOTIFY_RECIPIENTS ?? 'spencer@speedxmedia.com,marketing@speedxmedia.com')
+  .split(',')
+  .map((r) => r.trim())
+  .filter(Boolean);
 
 const SHEET_URL =
   'https://docs.google.com/spreadsheets/d/1tjaY0KlDKRD9UfB0IGzqrGHVvKQEvEaFsIxIHHolmc0/edit';
