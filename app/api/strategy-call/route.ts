@@ -117,21 +117,28 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (
     !body.name?.trim() ||
     !body.contact_email?.trim() ||
+    !body.phone?.trim() ||
     !body.business_name?.trim() ||
     !body.website?.trim()
   ) {
-    console.warn(`[strategy-call][${submissionId}] Validation failed`);
+    console.warn(`[strategy-call][${submissionId}] Validation failed — missing required field`);
     return NextResponse.json(
-      { error: "name, contact_email, business_name, and website are required" },
+      { error: "name, contact_email, phone, business_name, and website are required" },
+      { status: 400, headers: CORS_HEADERS }
+    );
+  }
+  // Mirror the client rule: at least 7 digits once formatting is stripped.
+  if (body.phone.replace(/\D/g, "").length < 7) {
+    console.warn(`[strategy-call][${submissionId}] Validation failed — invalid phone`);
+    return NextResponse.json(
+      { error: "phone must be a valid phone number" },
       { status: 400, headers: CORS_HEADERS }
     );
   }
 
   const name     = body.name.trim();
   const email    = body.contact_email.trim();
-  // Optional server-side (required client-side) so clients still on the old
-  // bundle don't get a hard 400 mid-session after a deploy.
-  const phone    = body.phone?.trim() ?? "";
+  const phone    = body.phone.trim();
   const business = body.business_name.trim();
   const website  = body.website.trim();
   const industry = body.industry?.trim() ?? "";
