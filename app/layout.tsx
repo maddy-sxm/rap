@@ -34,7 +34,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
 
-        {/* Google tag (gtag.js) */}
+        {/* Google tag (gtag.js) — one loader, configured for Google Ads + GA4 */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=AW-17879019755"
           strategy="afterInteractive"
@@ -45,6 +45,7 @@ export default function RootLayout({
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
             gtag('config', 'AW-17879019755');
+            gtag('config', 'G-5PME6QBZXX');
           `}
         </Script>
 
